@@ -24,15 +24,17 @@ class MetaKernelBash(MetaKernel):
     }
 
     def get_usage(self):
-        return "This is the bash kernel."
+        #return "This is the bash kernel."
+        return "This is the bash kernel - that's not very helpful is it ?"
 
     def do_execute_direct(self, code):
         if not code.strip():
             return
         self.log.debug('execute: %s' % code)
         shell_magic = self.line_magics['shell']
-        shell_magic.eval(code.strip())
+        resp = shell_magic.eval(code.strip())
         self.log.debug('execute done')
+        return resp.strip()
 
     def get_completions(self, info):
         shell_magic = self.line_magics['shell']
