@@ -1908,16 +1908,18 @@ class spawnu(spawn):
         string_type = str
         allowed_string_types = (str, )
         _chr = staticmethod(chr)
-        linesep = os.linesep
         crlf = '\r\n'
         lf = '\n'
+        #linesep = os.linesep
+        linesep = lf # Cowardly modification for cygwin
     else:
         string_type = unicode
         allowed_string_types = (unicode, )
         _chr = staticmethod(unichr)
-        linesep = os.linesep.decode('ascii')
         crlf = '\r\n'.decode('ascii')
         lf = '\n'.decode('ascii')
+        #linesep = os.linesep.decode('ascii')
+        linesep = lf # Cowardly modification for cygwin
     # This can handle unicode in both Python 2 and 3
     write_to_stdout = sys.stdout.write
 
