@@ -4,7 +4,7 @@ from metakernel import MetaKernel
 
 
 class MetaKernelEcho(MetaKernel):
-    implementation = 'MetaKernel Echo'
+    implementation = 'MetaKernel Echo - fork'
     implementation_version = '1.0'
     language = 'text'
     language_version = '0.1'
@@ -24,10 +24,10 @@ class MetaKernelEcho(MetaKernel):
     }
 
     def get_usage(self):
-        return "This is the echo kernel."
+        return "This is the echo kernel - a fork."
 
     def do_execute_direct(self, code):
-        return code.rstrip()
+        return "fork:" + code.rstrip()
 
     def repr(self, data):
         return repr(data)
