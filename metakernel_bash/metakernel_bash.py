@@ -2,6 +2,13 @@ from __future__ import print_function
 
 from metakernel import MetaKernel
 
+import os
+
+from metakernel_images import (
+    extract_image_filenames, display_data_for_image, image_setup_cmd
+)
+
+cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin']
 
 class MetaKernelBash(MetaKernel):
     implementation = 'MetaKernel Bash'
@@ -23,6 +30,23 @@ class MetaKernelBash(MetaKernel):
         'help_links': MetaKernel.help_links,
     }
 
+    image_function_sent=False
+
+    image_path_prefix=''
+    for cygwin_candidate_path in cygwin_candidate_paths:
+        if os.path.exists(cygwin_candidate_path):
+            image_path_prefix=cygwin_candidate_path
+            break
+
+    '''
+    def __init__(self, **kwargs):
+        # Register Bash function to write image data to temporary file
+        print("type=" + str(type(self)))
+        #shell_magic = self.line_magics['shell']
+        #resp = shell_magic.eval(image_setup_cmd)
+        return None
+    '''
+
     def get_usage(self):
         #return "This is the bash kernel."
         return "This is the bash kernel - that's not very helpful is it ?"
@@ -30,9 +54,41 @@ class MetaKernelBash(MetaKernel):
     def do_execute_direct(self, code):
         if not code.strip():
             return
+        #print("type=" + str(type(self)))
         self.log.debug('execute: %s' % code)
         shell_magic = self.line_magics['shell']
+
+        # Send 'display()' definition if not already done:
+        if not MetaKernelBash.image_function_sent:
+            MetaKernelBash.image_function_sent=True
+            shell_magic.eval(image_setup_cmd)
+
         resp = shell_magic.eval(code.strip())
+
+        #--------------------------------
+        #if not silent:
+        image_filenames, resp = extract_image_filenames(resp)
+
+        # Send standard output
+        #print("Sending 'stream_content'")
+        # stream_content = {'name': 'stdout', 'text': resp}
+        # self.send_response(self.iopub_socket, 'stream', stream_content)
+
+        # Send images, if any
+        for filename in image_filenames:
+            try:
+                # Modify filename path to add cygwin prefix:
+                filename = MetaKernelBash.image_path_prefix + filename
+                data = display_data_for_image(filename)
+            except ValueError as e:
+                #print("Sending 'stream message'")
+                message = {'name': 'stdout', 'text': str(e)}
+                self.send_response(self.iopub_socket, 'stream', message)
+            else:
+                #print("Sending 'display_data message'")
+                self.send_response(self.iopub_socket, 'display_data', data)
+        #--------------------------------
+
         self.log.debug('execute done')
         return resp.strip()
 
