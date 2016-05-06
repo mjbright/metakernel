@@ -51,7 +51,8 @@ class ShellMagic(Magic):
             self.kernel.Print(resp)
 
     def eval(self, cmd):
-        return self.repl.run_command(cmd, stream_handler=self.kernel.Print)
+        # Don't echo output here: return self.repl.run_command(cmd, stream_handler=self.kernel.Print)
+        return self.repl.run_command(cmd)
 
     def start_process(self):
         if self.repl is not None:
