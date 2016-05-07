@@ -8,6 +8,34 @@ from metakernel_images import (
     extract_image_filenames, display_data_for_image, image_setup_cmd
 )
 
+_TEXT_SAVED_PYDOT = "metakernel_bash_kernel: saved pydot data to:"
+
+pydot_setup_cmd = """
+pydot () {
+    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
+    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
+    TMPFILE=$(mktemp ${TMPDIR-/tmp}/pydot.XXXXXXXXXX)
+    cat > $TMPFILE
+""" + """
+    echo "%s $TMPFILE" >&2
+}
+""" % _TEXT_SAVED_PYDOT
+
+def extract_pydot_filenames(output):
+    output_lines = []
+    pydot_filenames = []
+
+    for line in output.split("\n"):
+        if line.startswith(_TEXT_SAVED_PYDOT):
+            filename = line.rstrip().split(": ")[-1]
+            pydot_filenames.append(filename)
+        else:
+            output_lines.append(line)
+
+    output = "\n".join(output_lines)
+    return pydot_filenames, output
+
+
 cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin']
 
 class MetaKernelBash(MetaKernel):
@@ -30,55 +58,85 @@ class MetaKernelBash(MetaKernel):
         'help_links': MetaKernel.help_links,
     }
 
-    image_function_sent=False
+    functions_sent=False
 
-    image_path_prefix=''
+    root_path_prefix=''
     for cygwin_candidate_path in cygwin_candidate_paths:
         if os.path.exists(cygwin_candidate_path):
-            image_path_prefix=cygwin_candidate_path
+            root_path_prefix=cygwin_candidate_path
             break
-
-    '''
-    def __init__(self, **kwargs):
-        # Register Bash function to write image data to temporary file
-        print("type=" + str(type(self)))
-        #shell_magic = self.line_magics['shell']
-        #resp = shell_magic.eval(image_setup_cmd)
-        return None
-    '''
 
     def get_usage(self):
         #return "This is the bash kernel."
-        return "This is the bash kernel - that's not very helpful is it ?"
+        return "This is the bash kernel - not a very helpful usage message is it ?"
 
     def do_execute_direct(self, code):
         if not code.strip():
             return
+        #print("code=<<<<" + str(code) + ">>>>")
         #print("type=" + str(type(self)))
         self.log.debug('execute: %s' % code)
         shell_magic = self.line_magics['shell']
 
-        # Send 'display()' definition if not already done:
-        if not MetaKernelBash.image_function_sent:
-            MetaKernelBash.image_function_sent=True
-            shell_magic.eval(image_setup_cmd)
+        # Send function definitions if not already done:
+        if not MetaKernelBash.functions_sent:
+            MetaKernelBash.functions_sent=True
+            ## print("TEST: " + shell_magic.eval( "date" ))
+            ## print("Sending image_setup_cmd<<" + image_setup_cmd + ">>")
+            resp = shell_magic.eval(image_setup_cmd)
+            ## print("resp=<<" + resp + ">>")
+            ## print("TEST: " + shell_magic.eval( "date" ))
+            ## print("Sending pydot_setup_cmd<<" + pydot_setup_cmd + ">>")
+            resp = shell_magic.eval(pydot_setup_cmd)
+            ## print("resp=<<" + resp + ">>")
+            ## print("TEST: " + shell_magic.eval( "date" ))
 
+        ## print("Sending code<<" + code.strip() + ">>")
         resp = shell_magic.eval(code.strip())
+        #resp = shell_magic.line_shell(code.strip())
+        ## print("resp=<<" + resp + ">>")
+        ## print("TEST: " + shell_magic.eval( "date" ))
 
         #--------------------------------
         #if not silent:
         image_filenames, resp = extract_image_filenames(resp)
+        pydot_filenames, resp = extract_pydot_filenames(resp)
 
         # Send standard output
         #print("Sending 'stream_content'")
         # stream_content = {'name': 'stdout', 'text': resp}
         # self.send_response(self.iopub_socket, 'stream', stream_content)
 
+        # Send pydot commands, if any
+        for filename in pydot_filenames:
+            try:
+                # Modify filename path to add cygwin prefix:
+                filename = MetaKernelBash.root_path_prefix + filename
+                lines = '\n'.join( open(filename, 'r').readlines() )
+                #shell_magic = self.line_magics['pydot']
+                #XXXX where to send this for Magic to be handled automatically?
+                #XXXX shell_magic = self.cell_magics['dot']
+                shell_magic = self.cell_magics['dot']
+                ## print("lines->pydot:" + lines) 
+                #resp = shell_magic.dot_cell(lines)
+                # cell_dot(self)
+                # line_dot(self, code)
+                resp = shell_magic.line_dot(lines)
+                ## print("resp=<<" + resp + ">>")
+                #data = display_data_for_image(filename)
+            except ValueError as e:
+                #print("Sending 'stream message'")
+                message = {'name': 'stdout', 'text': str(e)}
+                self.send_response(self.iopub_socket, 'stream', message)
+            #else:
+                #print("Sending 'display_data message'")
+                #self.send_response(self.iopub_socket, 'display_data', data)
+
         # Send images, if any
         for filename in image_filenames:
             try:
                 # Modify filename path to add cygwin prefix:
-                filename = MetaKernelBash.image_path_prefix + filename
+                filename = MetaKernelBash.root_path_prefix + filename
                 data = display_data_for_image(filename)
             except ValueError as e:
                 #print("Sending 'stream message'")
