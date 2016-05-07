@@ -12,7 +12,10 @@ _TEXT_SAVED_IMAGE = "metakernel_bash_kernel: saved image data to:"
 
 image_setup_cmd = """
 display () {
-    TMPFILE=$(mktemp ${TMPDIR-/tmp}/metakernel_bash_kernel.XXXXXXXXXX)
+    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
+    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
+    #TMPFILE=$(mktemp ${TMPDIR-/tmp}/metakernel_bash_kernel.XXXXXXXXXX)
+    TMPFILE=$(mktemp ${TMPDIR-/tmp}/display.XXXXXXXXXX)
     cat > $TMPFILE
     echo "%s $TMPFILE" >&2
 }
