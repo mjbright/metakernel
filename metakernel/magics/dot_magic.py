@@ -5,6 +5,8 @@
 from metakernel import Magic
 from IPython.display import HTML
 
+import os
+
 class DotMagic(Magic):
 
     def line_dot(self, code):
@@ -19,7 +21,10 @@ class DotMagic(Magic):
 
         """
         try:
-            import pydot
+            if os.name == 'nt':
+                import pydotplus as pydot
+            else:
+                import pydot
         except:
             raise Exception("You need to install pydot")
         graph = pydot.graph_from_dot_data(str(code))
@@ -42,7 +47,10 @@ class DotMagic(Magic):
             graph A { a->b };
         """
         try:
-            import pydot
+            if os.name == 'nt':
+                import pydotplus as pydot
+            else:
+                import pydot
         except:
             raise Exception("You need to install pydot")
         graph = pydot.graph_from_dot_data(str(self.code))
