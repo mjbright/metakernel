@@ -211,7 +211,7 @@ class MetaKernel(Kernel):
         the text to do_execute_direct.
         """
         code = "".join(open(filename).readlines())
-        return self.do_execute_direct(code)
+        return self.do_execute(code)
 
     def do_execute_meta(self, code):
         """
