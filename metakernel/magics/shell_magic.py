@@ -34,6 +34,7 @@ class ShellMagic(Magic):
 
         """
         # get in sync with the cwd
+        ## cwd = os.getcwd(); cwd = cwd.replace('\\', '/'); self.eval('cd %s' % cwd)
         self.eval('cd %s' % os.getcwd())
 
         command = " ".join(args)
