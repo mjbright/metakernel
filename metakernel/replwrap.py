@@ -206,6 +206,9 @@ def python(command="python"):
 
 def bash(command="bash", prompt_regex=re.compile('[$#]')):
     """Start a bash shell and return a :class:`REPLWrapper` object."""
+    #use_cmd = os.name == 'nt'
+    #use_cmd = False
+    #if use_cmd:
     if os.name == 'nt':
         prompt_regex = u('__repl_ready__')
         prompt_emit_cmd = u('echo __repl_ready__')
