@@ -1,0 +1,174 @@
+
+## ----------------------------------------
+## Configuration:
+
+CYGROOT="c:/tools/cygwin"
+
+## ----------------------------------------
+## Startup:
+
+#
+# These get echoed if re-sourced from the notebook
+#      source ~/.metakernelrc
+MESSAGE="[$(date)] Sourcing ${BASH_SOURCE[@]}"
+echo $MESSAGE
+#echo $MESSAGE >&2
+
+[ -z "$USER" ] && USER="unknown"
+
+TMPDIR=/tmp/metakernel_bash_kernel
+
+[ ! -d $TMPDIR ] && mkdir -p $TMPDIR
+echo $MESSAGE >> $TMPDIR/metakernelrc.${USER}.sourced
+
+test_fn() {
+    MESSAGE="[$(date)] Hello from test_fn() (declared in ${BASH_SOURCE[@]})"
+    echo $MESSAGE
+}
+
+
+## ----------------------------------------
+## User functions:
+
+#
+# Function: pydot_show_filetree_perl
+# Usage: find /tmp/ | pydot_show_filetree
+pydot_show_filetree_perl() {
+    echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+    perl -ne '
+  BEGIN {
+    print "digraph G {\n  edge [color=blue, arrowsize=2];\n  node [color=lightyellow2, style=filled];\n";
+  };
+
+  chomp();
+  if (!defined($ROOT)) {
+    $ROOT="$_"; $ROOT =~ s/\//_/g;
+    $ROOTLABEL=$_;
+    $NODES{$ROOT}="root";
+    print "\n  $ROOT [label=\"$ROOTLABEL\"];\n"; 
+  } else {
+    m/^(.+)\/([^\/]+)/;
+    ($PARENT,$CHILD)=($1,$2);
+    $NODE = $_;
+    $NODE =~ s/\//_/g;
+    $PARENTNODE = $PARENT;
+    $PARENTNODE =~ s/\//_/g;
+
+    $NODES{$NODE}=$CHILD;
+    print "  $PARENTNODE -> $NODE;\n";
+    print "\n  $NODE [label=\"$CHILD\"];\n"; 
+};
+
+    END { print "}\n"; }; ' | pydot
+}
+
+
+#
+# Function: pydot_show_filetree
+# Usage: find /tmp/ | pydot_show_filetree
+pydot_show_filetree_python_test() {
+    echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+    python -c '
+print("digraph G { \
+        edge [color=blue, arrowsize=2]; \
+        node [color=lightyellow2, style=filled]; \
+        root -> f1; \
+        root -> f2; \
+        f1 -> f4;\
+        f3 -> f5; \
+        f3 -> f6; \
+        f2 -> f3; \
+        root [label=\"/tmp/findtest\"]; \
+        f1 [label=\"file1\"]; \
+        f2 [label=\"file2\"]; \
+        f3 [label=\"file3\"]; \
+        f4 [label=\"file4\"]; \
+        f5 [label=\"file5\"]; \
+        f6 [label=\"file6\"]; \
+} ") ' | pydot
+#} ") '
+}
+
+
+#
+# Function: pydot_show_filetree
+# Usage: find /tmp/ | pydot_show_filetree
+pydot_show_filetree() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+
+import sys
+
+lines = sys.stdin.readlines()
+
+print("digraph G {\
+  edge [color=blue, arrowsize=2];\
+  node [color=lightyellow2, style=filled];\
+")
+
+ROOT=None
+NODES=dict()
+
+for line in lines:
+  line=line.strip()
+  if ROOT == None:
+    ROOT=line.replace('/','_')
+    ROOTLABEL=line;
+    NODES[ROOT]="root"
+    print()
+    print("  {} [label=\"{}\"];".format( ROOT, ROOTLABEL) )
+  else:
+    PARENT=line[:line.rfind('/')]
+    CHILD=line[1+line.rfind('/'):]
+    NODE = line.replace('/','_')
+    PARENTNODE = PARENT.replace('/','_')
+
+    NODES[NODE]=CHILD
+    print("  {} -> {};".format(PARENTNODE, NODE))
+    print()
+    print("  {} [label=\"{}\"];".format(NODE, CHILD))
+
+print("}\n")
+EOF
+  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
+#} ") '
+}
+
+#
+# Function: pydot_show_du
+# Usage: du -s /tmp/* | pydot_show_du
+# Inspired by
+#     http://stackoverflow.com/questions/28670676/graphviz-python-node-shapes-pie-chart-in-a-node
+pydot_show_du() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+
+import sys
+
+lines = sys.stdin.readlines()
+
+print("digraph G {\
+  {\
+    node [shape=circle style=wedged fillcolor=\"red;0.3:green;0.6:orange\"]\
+    A\
+  }\
+")
+
+for line in lines:
+  line=line.strip()
+
+print("}\n")
+EOF
+  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
+#} ") '
+}
+
+

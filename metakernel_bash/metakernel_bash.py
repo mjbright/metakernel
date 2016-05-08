@@ -21,6 +21,10 @@ pydot () {
 }
 """ % _TEXT_SAVED_PYDOT
 
+source_metakernelrc_cmd = """
+[ -f ~/.metakernelrc ] && source ~/.metakernelrc
+"""
+
 def extract_pydot_filenames(output):
     output_lines = []
     pydot_filenames = []
@@ -88,6 +92,7 @@ class MetaKernelBash(MetaKernel):
             ## print("TEST: " + shell_magic.eval( "date" ))
             ## print("Sending pydot_setup_cmd<<" + pydot_setup_cmd + ">>")
             resp = shell_magic.eval(pydot_setup_cmd)
+            resp = shell_magic.eval(source_metakernelrc_cmd)
             ## print("resp=<<" + resp + ">>")
             ## print("TEST: " + shell_magic.eval( "date" ))
 
@@ -114,8 +119,6 @@ class MetaKernelBash(MetaKernel):
                 filename = MetaKernelBash.root_path_prefix + filename
                 lines = '\n'.join( open(filename, 'r').readlines() )
                 #shell_magic = self.line_magics['pydot']
-                #XXXX where to send this for Magic to be handled automatically?
-                #XXXX shell_magic = self.cell_magics['dot']
                 shell_magic = self.cell_magics['dot']
                 ## print("lines->pydot:" + lines) 
                 #resp = shell_magic.dot_cell(lines)
@@ -124,6 +127,7 @@ class MetaKernelBash(MetaKernel):
                 resp = shell_magic.line_dot(lines)
                 ## print("resp=<<" + resp + ">>")
                 #data = display_data_for_image(filename)
+                return resp
             except ValueError as e:
                 #print("Sending 'stream message'")
                 message = {'name': 'stdout', 'text': str(e)}
