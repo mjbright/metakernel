@@ -159,10 +159,16 @@ import sys
 lines = sys.stdin.readlines()
 
 print("digraph G {\
-  {\
-    node [shape=circle style=wedged fillcolor=\"red;0.3:green;0.6:orange\"]\
+    rankdir=LR;\
+    node [shape=plaintext style=\"filled\"];\
+    subgraph cluster_01 { \
+      label = \"du\";\
+      key3 [label=\"key3\"]\
+      key2 [label=\"key2\"]\
+      key1 [label=\"key1\"]\
+    };\
+    node [shape=circle fizedsize=true width=10 style=wedged fillcolor=\"red;0.3:green;0.6:orange\"];\
     A\
-  }\
 ")
 
 for line in lines:
