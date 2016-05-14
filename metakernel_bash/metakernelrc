@@ -176,8 +176,8 @@ for line in lines:
 
 print("}\n")
 EOF
-  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
-#} ") '
+
+  sort -nr | tail -$MAX_ITEMS | python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
 }
 
 
