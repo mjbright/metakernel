@@ -147,6 +147,9 @@ EOF
 pydot_show_du() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
+  MAX_ITEMS=10
+  [ ! -z "$1" ] && MAX_ITEMS=$1
+
   PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
