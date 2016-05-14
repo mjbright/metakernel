@@ -214,3 +214,55 @@ invoke_python () {
     echo "$_TEXT_SAVED_python $TMPFILE" >&2
 }
 
+
+## test_html_table
+# Description: Demonstrates how to convert 'mysql' (or OpenStack cli) table output to html,
+#              can be piped to 'invoke_html' for rendering
+test_html_table() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+
+import IPython
+
+# This is nice to have but we want rather something which is callable from a bash kernel
+# how?
+def displayMysqlTableTextAsHTML(text):
+    header=False
+    colNames=[]
+    values=[]
+    for line in text.split('\n'):
+        line = line.strip()
+        row=[]
+        if len(line) != 0 and line[0] != '+' and line[0] == '|':
+            if not header:
+                header=True
+                colNames = [ colName.strip() for colName in (line.strip())[1:-1].split('|')]
+            else:
+                row      = [ value.strip()   for value   in (line.strip())[1:-1].split('|')]
+                values.append(row)
+
+    table = '<table>' +         '<tr>' + '\n'.join( [ '<th>'+colName+'</th>' for colName in colNames ] ) + '\n</tr>\n' +         '\n'.join([ '<tr>'+             '\n    '.join( [ '<td>'+value+'</td>' for value in row ] ) +
+          '\n</tr>' for row in values ]) +        '</table>'
+
+    return table
+
+text='''
++-------+-------+-------+-----+
+  |  col1 | col2  |  col3 |col4 |  
++-------+-------+-------+-----+
+|  val1 | val2  |  val3 |val4 |
+|  valu1|value2 |value3|val4|
++-------+-------+-------+-----+
+'''
+
+retval = displayMysqlTableTextAsHTML(text)
+print(retval)
+
+EOF
+
+  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
+}
+
