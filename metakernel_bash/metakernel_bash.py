@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from metakernel import MetaKernel
+from IPython.display import HTML
 
 import os
 
@@ -39,6 +40,27 @@ def extract_pydot_filenames(output):
     output = "\n".join(output_lines)
     return pydot_filenames, output
 
+_TEXT_SAVED_EXTENSION = "metakernel_bash_kernel: saved EXTENSION("
+
+def extract_extension_filenames(output):
+    output_lines = []
+    extensions = []
+    extension_filenames = []
+
+    for line in output.split("\n"):
+        if line.startswith(_TEXT_SAVED_EXTENSION):
+            restpos = line.find( _TEXT_SAVED_EXTENSION ) + len( _TEXT_SAVED_EXTENSION )
+            extension = line[ restpos : line.find( ')' ) ]
+            extensions.append(extension)
+            #print("SEEN extension << {} >>".format( extension ))
+
+            filename = line.rstrip().split(": ")[-1]
+            extension_filenames.append(filename)
+        else:
+            output_lines.append(line)
+
+    output = "\n".join(output_lines)
+    return extensions, extension_filenames, output
 
 cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin']
 
@@ -106,11 +128,46 @@ class MetaKernelBash(MetaKernel):
         #if not silent:
         image_filenames, resp = extract_image_filenames(resp)
         pydot_filenames, resp = extract_pydot_filenames(resp)
+        extensions, extension_filenames, resp = extract_extension_filenames(resp)
 
         # Send standard output
         #print("Sending 'stream_content'")
         # stream_content = {'name': 'stdout', 'text': resp}
         # self.send_response(self.iopub_socket, 'stream', stream_content)
+
+        # Send extension commands, if any
+        #print("Available cell magics are {}".format( str(self.cell_magics) ))
+        cnt=0
+        for filename in extension_filenames:
+            try:
+                filename = MetaKernelBash.root_path_prefix + filename
+                lines = '\n'.join( open(filename, 'r').readlines() )
+
+                shell_magic = None
+                if extensions[cnt] == 'js':
+                    shell_magic = self.cell_magics['javascript']
+                    resp = shell_magic.line_javascript(lines)
+                elif extensions[cnt] == 'html':
+                    shell_magic = self.cell_magics['html']
+                    resp = shell_magic.line_html(lines)
+                elif extensions[cnt] == 'python':
+                    shell_magic = self.cell_magics['python']
+                    resp = shell_magic.line_python(lines)
+                else:
+                    print("Unknown extension << {} >>".format( extensions[cnt] ))
+                    print("Available cell magics are {}".format( str(self.cell_magics) ))
+                    message = {'name': 'stdout', 'text': 'Unknown extension: <<' + extensions[cnt] + '>>'}
+                    self.send_response(self.iopub_socket, 'stream', message)
+                    resp = None
+                    #return
+
+                ## print("resp=<<" + resp + ">>")
+                #data = display_data_for_image(filename)
+                return resp
+            except ValueError as e:
+                message = {'name': 'stdout', 'text': str(e)}
+                self.send_response(self.iopub_socket, 'stream', message)
+            cnt=cnt+1
 
         # Send pydot commands, if any
         for filename in pydot_filenames:
@@ -120,7 +177,7 @@ class MetaKernelBash(MetaKernel):
                 lines = '\n'.join( open(filename, 'r').readlines() )
                 #shell_magic = self.line_magics['pydot']
                 shell_magic = self.cell_magics['dot']
-                ## print("lines->pydot:" + lines) 
+                ## print("lines->pydot:" + lines)
                 #resp = shell_magic.dot_cell(lines)
                 # cell_dot(self)
                 # line_dot(self, code)
@@ -153,6 +210,7 @@ class MetaKernelBash(MetaKernel):
 
         self.log.debug('execute done')
         return resp.strip()
+        #return HTML("<table><tr><td>" + resp.strip() + "</td></tr></table>")
 
     def get_completions(self, info):
         shell_magic = self.line_magics['shell']
