@@ -3,20 +3,14 @@ from __future__ import print_function
 from metakernel import MetaKernel
 from IPython.display import HTML
 
-import os
-
-from metakernel_images import (
-    extract_image_filenames, display_data_for_image, image_setup_cmd
-)
-
 import sys, os
+import base64
+import imghdr
 
 def get_metakernelrc_path():
     # Location of this script:
     #print('sys.argv[0] =', sys.argv[0])             
     pathname = os.path.dirname(sys.argv[0])        
-    #print('path =', pathname)
-    #print('full path =', os.path.abspath(pathname)) 
 
     #pathname = pathname.replace('\\', '/')
     for root, dirs, files in os.walk(pathname):
@@ -38,8 +32,10 @@ def get_metakernelrc_path():
 metakernelrc = get_metakernelrc_path()
 
 source_metakernelrc_cmd = """
+
 [ -f {} ]              && source {}
 [ -f ~/.metakernelrc ] && source ~/.metakernelrc
+
 """.format( metakernelrc, metakernelrc )
 
 _TEXT_SAVED_EXTENSION = "metakernel_bash_kernel: saved EXTENSION("
@@ -54,7 +50,6 @@ def extract_extension_filenames(output):
             restpos = line.find( _TEXT_SAVED_EXTENSION ) + len( _TEXT_SAVED_EXTENSION )
             extension = line[ restpos : line.find( ')' ) ]
             extensions.append(extension)
-            #print("SEEN extension << {} >>".format( extension ))
 
             filename = line.rstrip().split(": ")[-1]
             extension_filenames.append(filename)
@@ -98,6 +93,25 @@ class MetaKernelBash(MetaKernel):
         #return "This is the bash kernel."
         return "This is the bash kernel - not a very helpful usage message is it ?"
 
+    def display_data_for_image(self, filename):
+        with open(filename, 'rb') as f:
+            image = f.read()
+        os.unlink(filename)
+
+        image_type = imghdr.what(None, image)
+        if image_type is None:
+            raise ValueError("Not a valid image: %s" % image)
+
+        image_data = base64.b64encode(image).decode('ascii')
+        content = {
+            'data': {
+                'image/' + image_type: image_data
+            },
+            'metadata': {}
+        }
+        return content
+
+
     def do_execute_direct(self, code):
         if not code.strip():
             return
@@ -109,7 +123,7 @@ class MetaKernelBash(MetaKernel):
         # Send function definitions if not already done:
         if not MetaKernelBash.functions_sent:
             MetaKernelBash.functions_sent=True
-            resp = shell_magic.eval(image_setup_cmd)
+            #resp = shell_magic.eval(image_setup_cmd)
             resp = shell_magic.eval(source_metakernelrc_cmd)
 
         # Execute shell command
@@ -117,7 +131,7 @@ class MetaKernelBash(MetaKernel):
 
         #--------------------------------
         #if not silent:
-        image_filenames, resp = extract_image_filenames(resp)
+        #image_filenames, resp = extract_image_filenames(resp)
         extensions, extension_filenames, resp = extract_extension_filenames(resp)
 
         # Detect and process calls to extension functions
@@ -125,7 +139,10 @@ class MetaKernelBash(MetaKernel):
         for filename in extension_filenames:
             try:
                 filename = MetaKernelBash.root_path_prefix + filename
-                lines = '\n'.join( open(filename, 'r').readlines() )
+                if extensions[cnt] == 'image':
+                    display_data = self.display_data_for_image(filename)
+                else:
+                    lines = '\n'.join( open(filename, 'r').readlines() )
 
                 shell_magic = None
                 if extensions[cnt] == 'js':
@@ -140,6 +157,9 @@ class MetaKernelBash(MetaKernel):
                 elif extensions[cnt] == 'pydot':
                     shell_magic = self.cell_magics['dot']
                     resp = shell_magic.line_dot(lines)
+                elif extensions[cnt] == 'image':
+                    self.send_response(self.iopub_socket, 'display_data', display_data)
+
                 else:
                     print("Unknown extension << {} >>".format( extensions[cnt] ))
                     print("Available cell magics are {}".format( str(self.cell_magics) ))
@@ -148,27 +168,12 @@ class MetaKernelBash(MetaKernel):
                     resp = None
                     #return
 
-                ## print("resp=<<" + resp + ">>")
-                #data = display_data_for_image(filename)
                 return resp
             except ValueError as e:
                 message = {'name': 'stdout', 'text': str(e)}
                 self.send_response(self.iopub_socket, 'stream', message)
             cnt=cnt+1
 
-        # Send images, if any
-        for filename in image_filenames:
-            try:
-                # Modify filename path to add cygwin prefix:
-                filename = MetaKernelBash.root_path_prefix + filename
-                data = display_data_for_image(filename)
-            except ValueError as e:
-                #print("Sending 'stream message'")
-                message = {'name': 'stdout', 'text': str(e)}
-                self.send_response(self.iopub_socket, 'stream', message)
-            else:
-                #print("Sending 'display_data message'")
-                self.send_response(self.iopub_socket, 'display_data', data)
         #--------------------------------
 
         self.log.debug('execute done')

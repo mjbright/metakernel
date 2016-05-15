@@ -54,6 +54,7 @@ metakernel_magic() {
 }
 
 # Metakernel magic definition functions:
+display() { metakernel_magic 'image' $*; }
 pydot  () { metakernel_magic 'pydot' $*; }
 js     () { metakernel_magic 'js' $*; }
 html   () { metakernel_magic 'html' $*; }
