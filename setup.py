@@ -21,17 +21,19 @@ with open('metakernel/__init__.py', 'rb') as fid:
 
 setup(name='metakernel',
       version=version,
-      description='Metakernel for Jupyter',
+      description='Metakernel for Jupyter [forked from https://github.com/Calysto/metakernel]',
       long_description=open('README.rst', 'rb').read().decode('utf-8'),
       author='Steven Silvester',
       author_email='steven.silvester@ieee.org',
-      url="https://github.com/Calysto/metakernel",
+      url="https://github.com/mjbright/metakernel",
       install_requires=['IPython>=3.0'],
       packages=['metakernel', 'metakernel.magics', 'metakernel.utils',
                 'metakernel.tests', 'metakernel.magics.tests'],
       include_data_files = True,
       data_files = [("./metakernel/images", ["metakernel/images/logo-64x64.png", 
-                                           "metakernel/images/logo-32x32.png"])],
+                                           "metakernel/images/logo-32x32.png"]),
+                    ("rcfiles", ["metakernel_bash/metakernelrc", "metakernel_bash/metakernelrc.user"])
+                   ],
       classifiers=[
           'Framework :: IPython',
           'License :: OSI Approved :: BSD License',
