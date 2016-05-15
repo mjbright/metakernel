@@ -33,50 +33,30 @@ test_fn() {
 ## ----------------------------------------
 ## User functions:
 
+metakernel_magic() {
+    MAGIC=$1; shift
+    INPUT_FILE=""
+    [ ! -z "$1" ] && [ -f "$1" ] && { INPUT_FILE=$1; shift; }
 
-_TEXT_SAVED_pydot="metakernel_bash_kernel: saved EXTENSION(pydot) data to:"
+    local _TEXT_SAVED=$(echo "metakernel_bash_kernel: saved EXTENSION(__MAGIC__) data to:" | sed "s/__MAGIC__/$MAGIC/")
 
-pydot () {
     local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
     [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
-    TMPFILE=$(mktemp ${TMPDIR-/tmp}/pydot.XXXXXXXXXX)
-    cat > $TMPFILE
+    TMPFILE=$(mktemp ${TMPDIR-/tmp}/${MAGIC}.XXXXXXXXXX)
 
-    echo "$_TEXT_SAVED_pydot $TMPFILE" >&2
+    if [ -z "$INPUT_FILE" ];then
+        cat > $TMPFILE
+    else
+        cp $INPUT_FILE $TMPFILE
+    fi
+
+    echo "$_TEXT_SAVED $TMPFILE" >&2
 }
 
-_TEXT_SAVED_js="metakernel_bash_kernel: saved EXTENSION(js) data to:"
+# Metakernel magic definition functions:
+pydot  () { metakernel_magic 'pydot' $*; }
+js     () { metakernel_magic 'js' $*; }
+html   () { metakernel_magic 'html' $*; }
+PYTHON () { metakernel_magic 'python' $*; }
 
-js () {
-    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
-    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
-    TMPFILE=$(mktemp ${TMPDIR-/tmp}/js.XXXXXXXXXX)
-    cat > $TMPFILE
-
-    echo "$_TEXT_SAVED_js $TMPFILE" >&2
-}
-
-_TEXT_SAVED_html="metakernel_bash_kernel: saved EXTENSION(html) data to:"
-
-html () {
-    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
-    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
-    TMPFILE=$(mktemp ${TMPDIR-/tmp}/html.XXXXXXXXXX)
-    cat > $TMPFILE
-
-    echo "$_TEXT_SAVED_html $TMPFILE" >&2
-}
-
-_TEXT_SAVED_python="metakernel_bash_kernel: saved EXTENSION(python) data to:"
-
-PYTHON () {
-    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
-    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
-    TMPFILE=$(mktemp ${TMPDIR-/tmp}/python.XXXXXXXXXX)
-    cat > $TMPFILE
-
-    echo "$_TEXT_SAVED_python $TMPFILE" >&2
-}
-
-
-
+  
