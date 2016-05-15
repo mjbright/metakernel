@@ -1,0 +1,371 @@
+
+## ----------------------------------------
+## Configuration:
+
+CYGROOT="c:/tools/cygwin"
+
+[ -z "$USER" ] && USER="unknown"
+
+TMPDIR=/tmp/metakernel_bash_kernel
+
+function reread_user_metakernelrc { source ${BASH_SOURCE[0]}; }
+
+## ----------------------------------------
+## Startup:
+
+#
+# These get echoed if re-sourced from the notebook
+#      source ~/.metakernelrc
+MESSAGE="[$(date)] Sourcing <<${BASH_SOURCE[0]}>>"
+echo $MESSAGE
+#echo $MESSAGE >&2
+
+[ ! -d $TMPDIR ] && mkdir -p $TMPDIR
+echo $MESSAGE >> $TMPDIR/metakernelrc.${USER}.sourced
+
+utest_fn() {
+    MESSAGE="[$(date)] Hello from utest_fn() (declared in ${BASH_SOURCE[0]})"
+    echo $MESSAGE
+}
+
+
+## ----------------------------------------
+## User functions:
+
+#
+# Function: pydot_show_filetree_perl
+# Usage: find /tmp/ | pydot_show_filetree
+pydot_show_filetree_perl() {
+    echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+    perl -ne '
+  BEGIN {
+    print "digraph G {\n  edge [color=blue, arrowsize=2];\n  node [color=lightyellow2, style=filled];\n";
+  };
+
+  chomp();
+  if (!defined($ROOT)) {
+    $ROOT="$_"; $ROOT =~ s/\//_/g;
+    $ROOTLABEL=$_;
+    $NODES{$ROOT}="root";
+    print "\n  $ROOT [label=\"$ROOTLABEL\"];\n"; 
+  } else {
+    m/^(.+)\/([^\/]+)/;
+    ($PARENT,$CHILD)=($1,$2);
+    $NODE = $_;
+    $NODE =~ s/\//_/g;
+    $PARENTNODE = $PARENT;
+    $PARENTNODE =~ s/\//_/g;
+
+    $NODES{$NODE}=$CHILD;
+    print "  $PARENTNODE -> $NODE;\n";
+    print "\n  $NODE [label=\"$CHILD\"];\n"; 
+};
+
+    END { print "}\n"; }; ' | pydot
+}
+
+
+#
+# Function: pydot_show_filetree
+# Usage: find /tmp/ | pydot_show_filetree
+pydot_show_filetree_python_test() {
+    echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+    python -c '
+print("digraph G { \
+        edge [color=blue, arrowsize=2]; \
+        node [color=lightyellow2, style=filled]; \
+        root -> f1; \
+        root -> f2; \
+        f1 -> f4;\
+        f3 -> f5; \
+        f3 -> f6; \
+        f2 -> f3; \
+        root [label=\"/tmp/findtest\"]; \
+        f1 [label=\"file1\"]; \
+        f2 [label=\"file2\"]; \
+        f3 [label=\"file3\"]; \
+        f4 [label=\"file4\"]; \
+        f5 [label=\"file5\"]; \
+        f6 [label=\"file6\"]; \
+} ") ' | pydot
+#} ") '
+}
+
+
+#
+# Function: pydot_show_filetree
+# Usage: find /tmp/ | pydot_show_filetree
+pydot_show_filetree() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+
+import sys
+
+lines = sys.stdin.readlines()
+
+print("digraph G {\
+  edge [color=blue, arrowsize=2];\
+  node [color=lightyellow2, style=filled];\
+")
+
+ROOT=None
+NODES=dict()
+
+for line in lines:
+  line=line.strip()
+  if ROOT == None:
+    ROOT=line.replace('/','_')
+    ROOTLABEL=line;
+    NODES[ROOT]="root"
+    print()
+    print("  {} [label=\"{}\"];".format( ROOT, ROOTLABEL) )
+  else:
+    PARENT=line[:line.rfind('/')]
+    CHILD=line[1+line.rfind('/'):]
+    NODE = line.replace('/','_')
+    PARENTNODE = PARENT.replace('/','_')
+
+    NODES[NODE]=CHILD
+    print("  {} -> {};".format(PARENTNODE, NODE))
+    print()
+    print("  {} [label=\"{}\"];".format(NODE, CHILD))
+
+print("}\n")
+EOF
+  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
+#} ") '
+}
+
+#
+# Function: pydot_show_du
+# Usage: du -s /tmp/* | pydot_show_du
+# Inspired by
+#     http://stackoverflow.com/questions/28670676/graphviz-python-node-shapes-pie-chart-in-a-node
+pydot_show_du() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  MAX_ITEMS=10
+  [ ! -z "$1" ] && MAX_ITEMS=$1
+
+  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+
+import sys
+
+lines = sys.stdin.readlines()
+
+print("digraph G {\
+    rankdir=LR;\
+    node [shape=plaintext style=\"filled\"];\
+    subgraph cluster_01 { \
+      label = \"du\";\
+      key3 [label=\"key3\"]\
+      key2 [label=\"key2\"]\
+      key1 [label=\"key1\"]\
+    };\
+    node [shape=circle fizedsize=true width=10 style=wedged fillcolor=\"red;0.3:green;0.6:orange\"];\
+    A\
+")
+
+for line in lines:
+  line=line.strip()
+
+print("}\n")
+EOF
+
+  sort -nr | tail -$MAX_ITEMS | python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
+}
+
+
+## test_html_table
+# Description: Demonstrates how to convert 'mysql' (or OpenStack cli) table output to html,
+#              can be piped to 'html' for rendering
+test_html_table() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+
+import IPython
+
+# This is nice to have but we want rather something which is callable from a bash kernel
+# how?
+def displayMysqlTableTextAsHTML(text):
+    header=False
+    colNames=[]
+    values=[]
+    for line in text.split('\n'):
+        line = line.strip()
+        row=[]
+        if len(line) != 0 and line[0] != '+' and line[0] == '|':
+            if not header:
+                header=True
+                colNames = [ colName.strip() for colName in (line.strip())[1:-1].split('|')]
+            else:
+                row      = [ value.strip()   for value   in (line.strip())[1:-1].split('|')]
+                values.append(row)
+
+    table = '<table>' +         '<tr>' + '\n'.join( [ '<th>'+colName+'</th>' for colName in colNames ] ) + '\n</tr>\n' +         '\n'.join([ '<tr>'+             '\n    '.join( [ '<td>'+value+'</td>' for value in row ] ) +
+          '\n</tr>' for row in values ]) +        '</table>'
+
+    return table
+
+text='''
++-------+-------+-------+-----+
+  |  col1 | col2  |  col3 |col4 |  
++-------+-------+-------+-----+
+|  val1 | val2  |  val3 |val4 |
+|  valu1|value2 |value3|val4|
++-------+-------+-------+-----+
+'''
+
+retval = displayMysqlTableTextAsHTML(text)
+print(retval)
+
+EOF
+
+  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
+}
+
+# TODO:
+# Implement html_table (takes i/p in MySQL o/p format and renders it as an html table)
+# Implement lightning
+
+# TEST lightning:
+lightning() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+
+from lightning import Lightning
+
+from numpy import random, asarray
+
+lgn = Lightning(ipython=True, host='http://public.lightning-viz.org')
+
+series = random.randn(5, 50)
+
+lgn.line(series)
+
+EOF
+
+  #python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
+  cat $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
+}
+
+simple_d3js() {
+
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
+
+  cat <<EOF > $HTMLSCRIPT
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style> /* set the CSS */
+
+body { font: 12px Arial;}
+
+path { 
+    stroke: steelblue;
+    stroke-width: 2;
+    fill: none;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+</style>
+<div id="myd3">
+
+<!-- load the d3.js library -->    
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+<script>
+
+// Set the dimensions of the canvas / graph
+var margin = {top: 30, right: 20, bottom: 30, left: 50},
+    width = 600 - margin.left - margin.right,
+    height = 270 - margin.top - margin.bottom;
+
+// Parse the date / time
+var parseDate = d3.time.format("%d-%b-%y").parse;
+
+// Set the ranges
+var x = d3.time.scale().range([0, width]);
+var y = d3.scale.linear().range([height, 0]);
+
+// Define the axes
+var xAxis = d3.svg.axis().scale(x)
+    .orient("bottom").ticks(5);
+
+var yAxis = d3.svg.axis().scale(y)
+    .orient("left").ticks(5);
+
+// Define the line
+var valueline = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.close); });
+    
+// Adds the svg canvas
+var svg = d3.select("#myd3")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", 
+              "translate(" + margin.left + "," + margin.top + ")");
+
+// Get the data
+d3.csv("data.csv", function(error, data) {
+    data.forEach(function(d) {
+        d.date = parseDate(d.date);
+        d.close = +d.close;
+    });
+
+    // Scale the range of the data
+    x.domain(d3.extent(data, function(d) { return d.date; }));
+    y.domain([0, d3.max(data, function(d) { return d.close; })]);
+
+    // Add the valueline path.
+    svg.append("path")
+        .attr("class", "line")
+        .attr("d", valueline(data));
+
+    // Add the X Axis
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    // Add the Y Axis
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+});
+
+</script>
+</div>
+
+EOF
+
+  cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | html
+}
+
+
+
