@@ -38,9 +38,9 @@ if svem_flag in sys.argv:
 
 setup(name='metakernel_bash',
       version='0.11.3',
-      description='A Bash kernel for Jupyter/IPython',
+      description='A Bash kernel for Jupyter/IPython  [forked from https://github.com/Calysto/metakernel]',
       long_description="A Bash kernel for Jupyter/IPython, based on MetaKernel",
-      url="https://github.com/calysto/metakernel/tree/master/metakernel_bash",
+      url="https://github.com/mjbright/metakernel/tree/master/metakernel_bash",
       author='Steven Silvester',
       author_email='steven.silvester@ieee.org',
       py_modules=['metakernel_bash','metakernel_images'],
