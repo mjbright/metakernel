@@ -9,36 +9,9 @@ from metakernel_images import (
     extract_image_filenames, display_data_for_image, image_setup_cmd
 )
 
-_TEXT_SAVED_PYDOT = "metakernel_bash_kernel: saved pydot data to:"
-
-pydot_setup_cmd = """
-pydot () {
-    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
-    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
-    TMPFILE=$(mktemp ${TMPDIR-/tmp}/pydot.XXXXXXXXXX)
-    cat > $TMPFILE
-""" + """
-    echo "%s $TMPFILE" >&2
-}
-""" % _TEXT_SAVED_PYDOT
-
 source_metakernelrc_cmd = """
 [ -f ~/.metakernelrc ] && source ~/.metakernelrc
 """
-
-def extract_pydot_filenames(output):
-    output_lines = []
-    pydot_filenames = []
-
-    for line in output.split("\n"):
-        if line.startswith(_TEXT_SAVED_PYDOT):
-            filename = line.rstrip().split(": ")[-1]
-            pydot_filenames.append(filename)
-        else:
-            output_lines.append(line)
-
-    output = "\n".join(output_lines)
-    return pydot_filenames, output
 
 _TEXT_SAVED_EXTENSION = "metakernel_bash_kernel: saved EXTENSION("
 
@@ -107,36 +80,18 @@ class MetaKernelBash(MetaKernel):
         # Send function definitions if not already done:
         if not MetaKernelBash.functions_sent:
             MetaKernelBash.functions_sent=True
-            ## print("TEST: " + shell_magic.eval( "date" ))
-            ## print("Sending image_setup_cmd<<" + image_setup_cmd + ">>")
             resp = shell_magic.eval(image_setup_cmd)
-            ## print("resp=<<" + resp + ">>")
-            ## print("TEST: " + shell_magic.eval( "date" ))
-            ## print("Sending pydot_setup_cmd<<" + pydot_setup_cmd + ">>")
-            resp = shell_magic.eval(pydot_setup_cmd)
             resp = shell_magic.eval(source_metakernelrc_cmd)
-            ## print("resp=<<" + resp + ">>")
-            ## print("TEST: " + shell_magic.eval( "date" ))
 
-        ## print("Sending code<<" + code.strip() + ">>")
+        # Execute shell command
         resp = shell_magic.eval(code.strip())
-        #resp = shell_magic.line_shell(code.strip())
-        ## print("resp=<<" + resp + ">>")
-        ## print("TEST: " + shell_magic.eval( "date" ))
 
         #--------------------------------
         #if not silent:
         image_filenames, resp = extract_image_filenames(resp)
-        pydot_filenames, resp = extract_pydot_filenames(resp)
         extensions, extension_filenames, resp = extract_extension_filenames(resp)
 
-        # Send standard output
-        #print("Sending 'stream_content'")
-        # stream_content = {'name': 'stdout', 'text': resp}
-        # self.send_response(self.iopub_socket, 'stream', stream_content)
-
-        # Send extension commands, if any
-        #print("Available cell magics are {}".format( str(self.cell_magics) ))
+        # Detect and process calls to extension functions
         cnt=0
         for filename in extension_filenames:
             try:
@@ -153,6 +108,9 @@ class MetaKernelBash(MetaKernel):
                 elif extensions[cnt] == 'python':
                     shell_magic = self.cell_magics['python']
                     resp = shell_magic.line_python(lines)
+                elif extensions[cnt] == 'pydot':
+                    shell_magic = self.cell_magics['dot']
+                    resp = shell_magic.line_dot(lines)
                 else:
                     print("Unknown extension << {} >>".format( extensions[cnt] ))
                     print("Available cell magics are {}".format( str(self.cell_magics) ))
@@ -168,30 +126,6 @@ class MetaKernelBash(MetaKernel):
                 message = {'name': 'stdout', 'text': str(e)}
                 self.send_response(self.iopub_socket, 'stream', message)
             cnt=cnt+1
-
-        # Send pydot commands, if any
-        for filename in pydot_filenames:
-            try:
-                # Modify filename path to add cygwin prefix:
-                filename = MetaKernelBash.root_path_prefix + filename
-                lines = '\n'.join( open(filename, 'r').readlines() )
-                #shell_magic = self.line_magics['pydot']
-                shell_magic = self.cell_magics['dot']
-                ## print("lines->pydot:" + lines)
-                #resp = shell_magic.dot_cell(lines)
-                # cell_dot(self)
-                # line_dot(self, code)
-                resp = shell_magic.line_dot(lines)
-                ## print("resp=<<" + resp + ">>")
-                #data = display_data_for_image(filename)
-                return resp
-            except ValueError as e:
-                #print("Sending 'stream message'")
-                message = {'name': 'stdout', 'text': str(e)}
-                self.send_response(self.iopub_socket, 'stream', message)
-            #else:
-                #print("Sending 'display_data message'")
-                #self.send_response(self.iopub_socket, 'display_data', data)
 
         # Send images, if any
         for filename in image_filenames:

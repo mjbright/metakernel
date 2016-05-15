@@ -181,9 +181,20 @@ EOF
 }
 
 
+_TEXT_SAVED_pydot="metakernel_bash_kernel: saved EXTENSION(pydot) data to:"
+
+pydot () {
+    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
+    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
+    TMPFILE=$(mktemp ${TMPDIR-/tmp}/pydot.XXXXXXXXXX)
+    cat > $TMPFILE
+
+    echo "$_TEXT_SAVED_pydot $TMPFILE" >&2
+}
+
 _TEXT_SAVED_js="metakernel_bash_kernel: saved EXTENSION(js) data to:"
 
-invoke_js () {
+js () {
     local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
     [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
     TMPFILE=$(mktemp ${TMPDIR-/tmp}/js.XXXXXXXXXX)
@@ -194,7 +205,7 @@ invoke_js () {
 
 _TEXT_SAVED_html="metakernel_bash_kernel: saved EXTENSION(html) data to:"
 
-invoke_html () {
+html () {
     local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
     [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
     TMPFILE=$(mktemp ${TMPDIR-/tmp}/html.XXXXXXXXXX)
@@ -205,7 +216,7 @@ invoke_html () {
 
 _TEXT_SAVED_python="metakernel_bash_kernel: saved EXTENSION(python) data to:"
 
-invoke_python () {
+PYTHON () {
     local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
     [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
     TMPFILE=$(mktemp ${TMPDIR-/tmp}/python.XXXXXXXXXX)
@@ -217,7 +228,7 @@ invoke_python () {
 
 ## test_html_table
 # Description: Demonstrates how to convert 'mysql' (or OpenStack cli) table output to html,
-#              can be piped to 'invoke_html' for rendering
+#              can be piped to 'html' for rendering
 test_html_table() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
@@ -396,7 +407,7 @@ d3.csv("data.csv", function(error, data) {
 
 EOF
 
-  cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | invoke_html
+  cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | html
 }
 
 
