@@ -9,9 +9,38 @@ from metakernel_images import (
     extract_image_filenames, display_data_for_image, image_setup_cmd
 )
 
+import sys, os
+
+def get_metakernelrc_path():
+    # Location of this script:
+    #print('sys.argv[0] =', sys.argv[0])             
+    pathname = os.path.dirname(sys.argv[0])        
+    #print('path =', pathname)
+    #print('full path =', os.path.abspath(pathname)) 
+
+    #pathname = pathname.replace('\\', '/')
+    for root, dirs, files in os.walk(pathname):
+        if 'metakernel' in root:
+            path = root.split('/')
+            #print((len(path) - 1) * '---', os.path.basename(root))
+            for file in files:
+                if 'metakernelrc' in file:
+                    #print(len(path) * '---', file)
+                    filepath='/'.join(path)  + '/' + file
+                    filepath = filepath.replace('\\', '/')
+                    
+                    #print(filepath)
+                    return(filepath)
+
+    print("ERROR: failed to find package metakernelrc under <{}>".pathname)
+    sys.exit(1)
+
+metakernelrc = get_metakernelrc_path()
+
 source_metakernelrc_cmd = """
+[ -f {} ]              && source {}
 [ -f ~/.metakernelrc ] && source ~/.metakernelrc
-"""
+""".format( metakernelrc, metakernelrc )
 
 _TEXT_SAVED_EXTENSION = "metakernel_bash_kernel: saved EXTENSION("
 
