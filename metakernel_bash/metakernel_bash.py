@@ -96,13 +96,27 @@ class MetaKernelBash(MetaKernel):
     def display_data_for_image(self, filename):
         with open(filename, 'rb') as f:
             image = f.read()
-        os.unlink(filename)
+        #os.unlink(filename)
 
-        image_type = imghdr.what(None, image)
-        if image_type is None:
-            raise ValueError("Not a valid image: %s" % image)
+        image_data = None
+        try:
+            image_unencoded=image.decode("utf-8") 
+            if str(image_unencoded[:11]) == 'data:image/' and ';base64' in str(image_unencoded[:22]):
+                start_type_pos = image_unencoded.find('image/') + 6
+                end_type_pos = image_unencoded.find(';base64')
+                image_type = str(image_unencoded[ start_type_pos: end_type_pos])
+                #print("IMAGE_TYPE=<{}>".format(image_type))
+                image_data = image_unencoded[ end_type_pos + 8: ]
+        except Exception as e:
+            pass
 
-        image_data = base64.b64encode(image).decode('ascii')
+        if image_data == None:
+            image_type = imghdr.what(None, image)
+            if image_type is None:
+                raise ValueError("Not a valid image: %s" % image)
+
+            image_data = base64.b64encode(image).decode('ascii')
+
         content = {
             'data': {
                 'image/' + image_type: image_data
