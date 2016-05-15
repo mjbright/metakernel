@@ -35,19 +35,33 @@ test_fn() {
 
 metakernel_magic() {
     MAGIC=$1; shift
-    INPUT_FILE=""
-    [ ! -z "$1" ] && [ -f "$1" ] && { INPUT_FILE=$1; shift; }
+    INPUT_SRC=""
+    [ ! -z "$1" ] && INPUT_SRC="$1"; shift;
+    #[ ! -z "$1" ] && [ -f "$1" ] && { INPUT_SRC="$1"; shift; }
 
     local _TEXT_SAVED=$(echo "metakernel_bash_kernel: saved EXTENSION(__MAGIC__) data to:" | sed "s/__MAGIC__/$MAGIC/")
 
-    local TMPDIR=${TMPDIR-/tmp}/metakernel_bash_kernel
-    [ ! -d $TMPDIR ] && mkdir -p $TMPDIR
-    TMPFILE=$(mktemp ${TMPDIR-/tmp}/${MAGIC}.XXXXXXXXXX)
+    TMPFILE=$(mktemp ${TMPDIR}/${MAGIC}.XXXXXXXXXX)
 
-    if [ -z "$INPUT_FILE" ];then
+    if [ -z "$INPUT_SRC" ];then
         cat > $TMPFILE
     else
-        cp $INPUT_FILE $TMPFILE
+        echo "$INPUT_SRC" > /tmp/Y
+        case "$INPUT_SRC" in
+            http:*)
+                echo "http" > /tmp/X;
+                wget -O - $INPUT_SRC > $TMPFILE;
+                ;;
+            https:*)
+                echo "https" > /tmp/X;
+                wget -O - $INPUT_SRC > $TMPFILE;
+                ;;
+            data:*)
+                echo "data" > /tmp/X;
+                echo "$INPUT_SRC" > $TMPFILE;
+                ;;
+            *) cp $INPUT_SRC $TMPFILE;;
+        esac
     fi
 
     echo "$_TEXT_SAVED $TMPFILE" >&2
