@@ -262,7 +262,7 @@ EOF
   cat $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
 }
 
-csv_chart() {
+csv_barchart() {
 
   echo "Invoked ${FUNCNAME[0]} $*" >&2
   CSV_FILE=$1; shift
