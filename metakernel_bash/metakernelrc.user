@@ -262,7 +262,7 @@ EOF
   cat $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
 }
 
-simple_d3js() {
+csv_chart() {
 
   echo "Invoked ${FUNCNAME[0]} $*" >&2
   CSV_FILE=$1; shift
