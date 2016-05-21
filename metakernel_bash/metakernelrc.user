@@ -265,7 +265,9 @@ EOF
 csv_barchart() {
 
   echo "Invoked ${FUNCNAME[0]} $*" >&2
-  CSV_FILE=$1; shift
+
+  # After call, data will be in file $TMPFILE:
+  getinput_src "${FUNCNAME[0]}" "$1"
 
   HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
 
@@ -332,7 +334,7 @@ var svg = d3.select("#myd3")
               "translate(" + margin.left + "," + margin.top + ")");
 
 // Get the data
-d3.csv("$CSV_FILE", function(error, data) {
+d3.csv("$TMPFILE", function(error, data) {
     data.forEach(function(d) {
         d.date = parseDate(d.date);
         d.close = +d.close;
