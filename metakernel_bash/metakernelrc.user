@@ -265,6 +265,7 @@ EOF
 simple_d3js() {
 
   echo "Invoked ${FUNCNAME[0]} $*" >&2
+  CSV_FILE=$1; shift
 
   HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
 
@@ -331,7 +332,7 @@ var svg = d3.select("#myd3")
               "translate(" + margin.left + "," + margin.top + ")");
 
 // Get the data
-d3.csv("data.csv", function(error, data) {
+d3.csv("$CSV_FILE", function(error, data) {
     data.forEach(function(d) {
         d.date = parseDate(d.date);
         d.close = +d.close;
