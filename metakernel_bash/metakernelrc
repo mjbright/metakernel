@@ -33,20 +33,18 @@ test_fn() {
 ## ----------------------------------------
 ## User functions:
 
-metakernel_magic() {
-    MAGIC=$1; shift
-    INPUT_SRC=""
-    [ ! -z "$1" ] && INPUT_SRC="$1"; shift;
+getinput_src() {
+    TMPFILE_BASE="$1"; shift
+    INPUT_SRC="$1"
+    #[ ! -z "$1" ] && INPUT_SRC="$1"; shift;
     #[ ! -z "$1" ] && [ -f "$1" ] && { INPUT_SRC="$1"; shift; }
 
-    local _TEXT_SAVED=$(echo "metakernel_bash_kernel: saved EXTENSION(__MAGIC__) data to:" | sed "s/__MAGIC__/$MAGIC/")
-
-    TMPFILE=$(mktemp ${TMPDIR}/${MAGIC}.XXXXXXXXXX)
+    TMPFILE=$(mktemp ${TMPDIR}/${TMPFILE_BASE}.$$)
 
     if [ -z "$INPUT_SRC" ];then
+        # No input file or url specified, so create file from stdin
         cat > $TMPFILE
     else
-        echo "$INPUT_SRC" > /tmp/Y
         case "$INPUT_SRC" in
             http:*)
                 wget -O - $INPUT_SRC > $TMPFILE;
@@ -60,6 +58,14 @@ metakernel_magic() {
             *) cp $INPUT_SRC $TMPFILE;;
         esac
     fi
+}
+
+metakernel_magic() {
+    MAGIC=$1; shift
+
+    local _TEXT_SAVED=$(echo "metakernel_bash_kernel: saved EXTENSION(__MAGIC__) data to:" | sed "s/__MAGIC__/$MAGIC/")
+
+    getinput_src $MAGIC $1
 
     echo "$_TEXT_SAVED $TMPFILE" >&2
 }
