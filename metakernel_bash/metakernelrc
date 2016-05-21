@@ -49,15 +49,12 @@ metakernel_magic() {
         echo "$INPUT_SRC" > /tmp/Y
         case "$INPUT_SRC" in
             http:*)
-                echo "http" > /tmp/X;
                 wget -O - $INPUT_SRC > $TMPFILE;
                 ;;
             https:*)
-                echo "https" > /tmp/X;
                 wget -O - $INPUT_SRC > $TMPFILE;
                 ;;
             data:*)
-                echo "data" > /tmp/X;
                 echo "$INPUT_SRC" > $TMPFILE;
                 ;;
             *) cp $INPUT_SRC $TMPFILE;;
