@@ -266,7 +266,7 @@ EOF
   python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
 }
 
-csv_barchart() {
+csv_date_barchart() {
 
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
@@ -274,7 +274,6 @@ csv_barchart() {
   getinput_src "${FUNCNAME[0]}" "$1"
 
   # Copy TMPFILE to local ./tmp/
-  #TMPFILE=${CYGROOT}${TMPFILE}
   [ ! -d tmp ] && mkdir -p tmp
   cp $TMPFILE ./tmp/
   TMPFILE=tmp/${TMPFILE##*/}
@@ -304,7 +303,7 @@ path {
 }
 
 </style>
-<div id="myd3">
+<div id="myd3_date_barchart">
 
 <!-- load the d3.js library -->    
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -333,10 +332,10 @@ var yAxis = d3.svg.axis().scale(y)
 // Define the line
 var valueline = d3.svg.line()
     .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.close); });
+    .y(function(d) { return y(d.yValue); });
     
 // Adds the svg canvas
-var svg = d3.select("#myd3")
+var svg = d3.select("#myd3_date_barchart")
     .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -348,12 +347,12 @@ var svg = d3.select("#myd3")
 d3.csv("$TMPFILE", function(error, data) {
     data.forEach(function(d) {
         d.date = parseDate(d.date);
-        d.close = +d.close;
+        d.yValue = +d.yValue;
     });
 
     // Scale the range of the data
     x.domain(d3.extent(data, function(d) { return d.date; }));
-    y.domain([0, d3.max(data, function(d) { return d.close; })]);
+    y.domain([0, d3.max(data, function(d) { return d.yValue; })]);
 
     // Add the valueline path.
     svg.append("path")
