@@ -266,7 +266,7 @@ EOF
   python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
 }
 
-csv_date_barchart() {
+csv_date_linechart() {
 
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
@@ -277,7 +277,7 @@ csv_date_barchart() {
   [ ! -d tmp ] && mkdir -p tmp
   cp $TMPFILE ./tmp/
   TMPFILE=tmp/${TMPFILE##*/}
-  echo "csv_barchart: data file=$TMPFILE"
+  echo "csv_linechart: data file=$TMPFILE"
 
   HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
 
@@ -303,7 +303,7 @@ path {
 }
 
 </style>
-<div id="myd3_date_barchart">
+<div id="myd3_date_linechart">
 
 <!-- load the d3.js library -->    
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -335,7 +335,7 @@ var valueline = d3.svg.line()
     .y(function(d) { return y(d.yValue); });
     
 // Adds the svg canvas
-var svg = d3.select("#myd3_date_barchart")
+var svg = d3.select("#myd3_date_linechart")
     .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -380,7 +380,7 @@ EOF
   cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | html
 }
 
-csv_barchart() {
+csv_linechart() {
 
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
@@ -392,7 +392,7 @@ csv_barchart() {
   [ ! -d tmp ] && mkdir -p tmp
   cp $TMPFILE ./tmp/
   TMPFILE=tmp/${TMPFILE##*/}
-  echo "csv_barchart: data file=$TMPFILE"
+  echo "csv_linechart: data file=$TMPFILE"
 
   HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
 
@@ -418,7 +418,7 @@ path {
 }
 
 </style>
-<div id="myd3_barchart">
+<div id="myd3_linechart">
 
 <!-- load the d3.js library -->    
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -447,7 +447,7 @@ var valueline = d3.svg.line()
     .y(function(d) { return y(d.yValue); });
     
 // Adds the svg canvas
-var svg = d3.select("#myd3_barchart")
+var svg = d3.select("#myd3_linechart")
     .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
