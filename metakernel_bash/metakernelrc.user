@@ -611,191 +611,53 @@ EOF
   cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | html
 }
 
-csv_piechart_test() {
-  echo "Invoked ${FUNCNAME[0]} $*" >&2
+csv_d3piechart_0() {
+    DATA_CSV="$1"; shift
 
-  # After call, data will be in file $TMPFILE:
-  getinput_src "${FUNCNAME[0]}" "$1"
+    # After call, data will be in file $TMPFILE:
+    GETINPUT ${FUNCNAME[0]} "$DATA_CSV"
+    COPY_TMPFILE
+    DATA_CSV=$TMPFILE
 
-  # Copy TMPFILE to local ./tmp/
-  [ ! -d tmp ] && mkdir -p tmp
-  cp $TMPFILE ./tmp/
-  TMPFILE=tmp/${TMPFILE##*/}
-  echo "csv_linechart: data file=$TMPFILE"
-
-  HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
-
-  cat <<EOF > $HTMLSCRIPT
-<!DOCTYPE html>
-<meta charset="utf-8">
-<style>
-
-.arc text {
-  font: 10px sans-serif;
-  text-anchor: middle;
+    DIV_ID=${FUNCNAME[0]}_$(date +%s)
+    # USE_TEMPLATE <template> <input-file> <div-id>
+    USE_TEMPLATE d3_pie_0.js.template "$DATA_CSV" "$DIV_ID" | html
 }
 
-.arc path {
-  stroke: #fff;
+csv_d3piechart() {
+    DATA_CSV="$1"; shift
+
+    # After call, data will be in file $TMPFILE:
+    GETINPUT ${FUNCNAME[0]} "$DATA_CSV"
+    COPY_TMPFILE
+    DATA_CSV=$TMPFILE
+
+    DIV_ID=${FUNCNAME[0]}_$(date +%s)
+    # USE_TEMPLATE <template> <input-file> <div-id>
+    USE_TEMPLATE d3_pie.js.template "$DATA_CSV" "$DIV_ID" | html
 }
 
-</style>
-<div id="myd3_piechart_test">
-</div>
-<script src="//d3js.org/d3.v3.min.js"></script>
-<script>
+du_d3piechart() {
 
-var width = 960,
-    height = 500,
-    radius = Math.min(width, height) / 2;
-
-var color = d3.scale.ordinal()
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-
-var arc = d3.svg.arc()
-    .outerRadius(radius - 10)
-    .innerRadius(0);
-
-var labelArc = d3.svg.arc()
-    .outerRadius(radius - 40)
-    .innerRadius(radius - 40);
-
-var pie = d3.layout.pie()
-    .sort(null)
-    .value(function(d) { return d.population; });
-
-var svg = d3.select("#myd3_piechart_test").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-  .append("g")
-    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-d3.csv("$TMPFILE", type, function(error, data) {
-  if (error) throw error;
-
-  var g = svg.selectAll(".arc")
-      .data(pie(data))
-    .enter().append("g")
-      .attr("class", "arc");
-
-  g.append("path")
-      .attr("d", arc)
-      .style("fill", function(d) { return color(d.data.age); });
-
-  g.append("text")
-      .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
-      .attr("dy", ".35em")
-      .text(function(d) { return d.data.age; });
-});
-
-function type(d) {
-  d.population = +d.population;
-  return d;
-}
-
-</script>
-
-EOF
-
-  cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | html
-}
-
-csv_piechart() {
-  echo "Invoked ${FUNCNAME[0]} $*" >&2
-
-  # After call, data will be in file $TMPFILE:
-  getinput_src "${FUNCNAME[0]}" "$1"
-
-  # Copy TMPFILE to local ./tmp/
-  [ ! -d tmp ] && mkdir -p tmp
-  cp $TMPFILE ./tmp/
-  TMPFILE=tmp/${TMPFILE##*/}
-  echo "csv_linechart: data file=$TMPFILE"
-
-  HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
-
-  cat <<EOF > $HTMLSCRIPT
-<!DOCTYPE html>
-<meta charset="utf-8">
-<style>
-
-.arc text {
-  font: 10px sans-serif;
-  text-anchor: middle;
-}
-
-.arc path {
-  stroke: #fff;
-}
-
-</style>
-<div id="myd3_piechart">
-</div>
-<script src="//d3js.org/d3.v3.min.js"></script>
-<script>
-
-var width = 960,
-    height = 500,
-    radius = Math.min(width, height) / 2;
-
-    //.range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-var color = d3.scale.ordinal()
- .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00", "#333333", "#336666", "#339999"]);
-
-var arc = d3.svg.arc()
-    .outerRadius(radius - 10)
-    .innerRadius(0);
-
-var labelArc = d3.svg.arc()
-    .outerRadius(radius - 40)
-    .innerRadius(radius - 40);
-
-var pie = d3.layout.pie()
-    .sort(null)
-    .value(function(d) { return d.value; });
-
-var svg = d3.select("#myd3_piechart").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-  .append("g")
-    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-d3.csv("$TMPFILE", type, function(error, data) {
-  if (error) throw error;
-
-  var g = svg.selectAll(".arc")
-      .data(pie(data))
-    .enter().append("g")
-      .attr("class", "arc");
-
-  g.append("path")
-      .attr("d", arc)
-      .style("fill", function(d) { return color(d.value); }); // color based on value
-
-  g.append("text")
-      .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
-      .attr("dy", ".35em")
-      .text(function(d) { return ""+d.data.item+"  "+d.value+" by"; });
-});
-
-function type(d) {
-  d.value = +d.value;
-  return d;
-}
-
-</script>
-
-EOF
-
-  cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | html
+    if [ -z "$DU_MAX" ];then
+        du $* | sort -nr
+    else
+        du $* | sort -nr | head -$DU_MAX
+    fi | awk 'BEGIN { print "item,value";}; { print $2","$1;}' | csv_d3piechart
 }
 
 test_piechart_js() {
-    #USE_TEMPLATE d3_pie.js.template "$1" "$1" "$2" | html
-    USE_TEMPLATE d3_pie.js.template "$1" "$2" | html
+    # After call, data will be in file $TMPFILE:
+    GETINPUT ${FUNCNAME[0]} "$DATA_CSV"
+    COPY_TMPFILE
+    DATA_CSV=$TMPFILE
+
+    # USE_TEMPLATE <template> <input-file> <div-id>
+    USE_TEMPLATE d3_pie.js.template "$1" "test_piechart" | html
 }
 
 test_alert_js() {
+    # USE_TEMPLATE <template> <alert-message>
     USE_TEMPLATE alert.js.template "$1" | js
 }
 

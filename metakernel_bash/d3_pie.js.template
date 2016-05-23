@@ -13,7 +13,7 @@
 }
 
 </style>
-<div id="<<0>>">
+<div id="<<1>>">
 </div>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
@@ -38,13 +38,13 @@ var pie = d3.layout.pie()
     .sort(null)
     .value(function(d) { return d.value; });
 
-var svg = d3.select("#<<0>>").append("svg")
+var svg = d3.select("#<<1>>").append("svg")
     .attr("width", width)
     .attr("height", height)
   .append("g")
     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-d3.csv("<<1>>", type, function(error, data) {
+d3.csv("<<0>>", type, function(error, data) {
   if (error) throw error;
 
   var g = svg.selectAll(".arc")

@@ -33,12 +33,13 @@ test_fn() {
 ## ----------------------------------------
 ## User functions:
 
-getinput_src() {
+GETINPUT() {
     TMPFILE_BASE="$1"; shift
     INPUT_SRC="$1"
 
     TMPFILE=$(mktemp ${TMPDIR}/${TMPFILE_BASE}.XXXXXX)
 
+    echo "TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >/tmp/input.file
     echo "TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >&2
     #[ ! -z "$1" ] && INPUT_SRC="$1"; shift;
     #[ ! -z "$1" ] && [ -f "$1" ] && { INPUT_SRC="$1"; shift; }
@@ -57,9 +58,23 @@ getinput_src() {
             data:*)
                 echo "$INPUT_SRC" > $TMPFILE;
                 ;;
-            *) cp $INPUT_SRC $TMPFILE;;
+            *)
+                if [ -f "$INPUT_SRC" ];then
+                    cp $INPUT_SRC $TMPFILE
+                else
+                    echo "No such INPUT_FILE <<$INPUT_SRC>>" > $TMPFILE
+                fi
+                ;;
         esac
     fi
+}
+
+COPY_TMPFILE() {
+    # Copy TMPFILE to local ./tmp/
+    [ ! -d tmp ] && mkdir -p tmp
+    cp $TMPFILE ./tmp/
+    TMPFILE=tmp/${TMPFILE##*/}
+    echo "$TEMPLATE: data file=$TMPFILE" >> $USE_TEMPLATE_LOG
 }
 
 metakernel_magic() {
@@ -67,9 +82,11 @@ metakernel_magic() {
 
     local _TEXT_SAVED=$(echo "metakernel_bash_kernel: saved EXTENSION(__MAGIC__) data to:" | sed "s/__MAGIC__/$MAGIC/")
 
-    getinput_src $MAGIC $1
+    #getinput_src $MAGIC $1
+    GETINPUT $MAGIC $*
 
     echo "$_TEXT_SAVED $TMPFILE" >&2
+    cat $TMPFILE
 }
 
 # Metakernel magic definition functions:
@@ -80,19 +97,12 @@ html   () { metakernel_magic 'html' $*; }
 PYTHON () { metakernel_magic 'python' $*; }
 
 USE_TEMPLATE() {
+  # USE_TEMPLATE <template> <alert-message>
+  # USE_TEMPLATE <template> <data-file> <div-id>
   echo "Invoked ${FUNCNAME[0]} $*" >&2
   TEMPLATE=$1; shift
 
   USE_TEMPLATE_LOG=/tmp/template.log
-
-  # After call, data will be in file $TMPFILE:
-  getinput_src "${FUNCNAME[0]}_${TEMPLATE}" "$1"
-
-  # Copy TMPFILE to local ./tmp/
-  [ ! -d tmp ] && mkdir -p tmp
-  cp $TMPFILE ./tmp/
-  TMPFILE=tmp/${TMPFILE##*/}
-  echo "$TEMPLATE: data file=$TMPFILE" >> $USE_TEMPLATE_LOG
 
   local _SCRIPT=${CYGROOT}$TMPDIR/${FUNCNAME[0]}.${TEMPLATE}.script
   echo "_SCRIPT=$_SCRIPT" >> $USE_TEMPLATE_LOG
@@ -125,6 +135,5 @@ print(text.format(*sys.argv[1:]), end="")
 
   cat $_SCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout
 }
-
 
 
