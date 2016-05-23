@@ -790,5 +790,12 @@ EOF
   cat $HTMLSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout | html
 }
 
+test_piechart_js() {
+    USE_TEMPLATE d3_pie.js.template "$1" "$1" "$2" | html
+}
+
+test_alert_js() {
+    USE_TEMPLATE alert.js.template "$1" | js
+}
 
 

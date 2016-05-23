@@ -39,7 +39,7 @@ getinput_src() {
 
     TMPFILE=$(mktemp ${TMPDIR}/${TMPFILE_BASE}.XXXXXX)
 
-    echo "TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'"
+    echo "TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >&2
     #[ ! -z "$1" ] && INPUT_SRC="$1"; shift;
     #[ ! -z "$1" ] && [ -f "$1" ] && { INPUT_SRC="$1"; shift; }
 
@@ -79,4 +79,46 @@ js     () { metakernel_magic 'js' $*; }
 html   () { metakernel_magic 'html' $*; }
 PYTHON () { metakernel_magic 'python' $*; }
 
+USE_TEMPLATE() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+  TEMPLATE=$1; shift
+
+  USE_TEMPLATE_LOG=/tmp/template.log
+
+  # After call, data will be in file $TMPFILE:
+  getinput_src "${FUNCNAME[0]}_${TEMPLATE}" "$1"
+
+  # Copy TMPFILE to local ./tmp/
+  [ ! -d tmp ] && mkdir -p tmp
+  cp $TMPFILE ./tmp/
+  TMPFILE=tmp/${TMPFILE##*/}
+  echo "$TEMPLATE: data file=$TMPFILE" >> $USE_TEMPLATE_LOG
+
+  local _SCRIPT=${CYGROOT}$TMPDIR/${FUNCNAME[0]}.script
+  echo "_SCRIPT=$_SCRIPT" >> $USE_TEMPLATE_LOG
+
+  SOURCE_FILE=${BASH_SOURCE[0]}
   
+  TEMPLATE_FILE=${SOURCE_FILE%/*}/${TEMPLATE}
+
+  echo "python_script $@ < $TEMPLATE_FILE >$_SCRIPT" >> $USE_TEMPLATE_LOG
+
+  local _PYSCRIPT='import sys; text="".join( sys.stdin.readlines() ); text=text.replace("{","{{").replace("}","}}").replace("<<>>","{}"); print(text.format(*sys.argv[1:]), end="")'
+
+  python -c "$_PYSCRIPT" "$@" < $TEMPLATE_FILE >$_SCRIPT 2>> $USE_TEMPLATE_LOG
+  echo "python -c $_PYSCRIPT '$@' < $TEMPLATE_FILE >$_SCRIPT" >> $USE_TEMPLATE_LOG
+#  python -c '
+#import sys
+#
+#text="".join( sys.stdin.readlines() )
+#print(text.format(*sys.argv[1:]), end="")
+#' "$@" < $TEMPLATE_FILE >$_SCRIPT 2>> $USE_TEMPLATE_LOG
+
+  ls -altr $TEMPLATE_FILE $_SCRIPT >> $USE_TEMPLATE_LOG
+  cat $_SCRIPT >> $USE_TEMPLATE_LOG
+
+  cat $_SCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout
+}
+
+
+

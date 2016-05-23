@@ -32,7 +32,10 @@ setup(name='metakernel',
       include_data_files = True,
       data_files = [("./metakernel/images", ["metakernel/images/logo-64x64.png", 
                                            "metakernel/images/logo-32x32.png"]),
-                    ("rcfiles", ["metakernel_bash/metakernelrc", "metakernel_bash/metakernelrc.user"])
+                    ("rcfiles", ["metakernel_bash/metakernelrc", "metakernel_bash/metakernelrc.user",
+                                 "metakernel_bash/alert.js.template",
+                                 "metakernel_bash/d3_pie.js.template"
+                                ])
                    ],
       classifiers=[
           'Framework :: IPython',
