@@ -94,7 +94,7 @@ USE_TEMPLATE() {
   TMPFILE=tmp/${TMPFILE##*/}
   echo "$TEMPLATE: data file=$TMPFILE" >> $USE_TEMPLATE_LOG
 
-  local _SCRIPT=${CYGROOT}$TMPDIR/${FUNCNAME[0]}.script
+  local _SCRIPT=${CYGROOT}$TMPDIR/${FUNCNAME[0]}.${TEMPLATE}.script
   echo "_SCRIPT=$_SCRIPT" >> $USE_TEMPLATE_LOG
 
   SOURCE_FILE=${BASH_SOURCE[0]}
@@ -103,16 +103,22 @@ USE_TEMPLATE() {
 
   echo "python_script $@ < $TEMPLATE_FILE >$_SCRIPT" >> $USE_TEMPLATE_LOG
 
-  local _PYSCRIPT='import sys; text="".join( sys.stdin.readlines() ); text=text.replace("{","{{").replace("}","}}").replace("<<>>","{}"); print(text.format(*sys.argv[1:]), end="")'
+  local _PYSCRIPT='
+import sys
+
+text="".join( sys.stdin.readlines() )
+
+# Replace braces by double-braces (so no formatting)
+# Replace quadruple-braces by single-braces (so formatting will occur)
+text=text.replace("{","{{").replace("}","}}").replace("<<","{").replace(">>","}")
+#text=text.replace("{","{{").replace("}","}}").replace("{{{{","{").replace("}}}}","}")
+
+#print("TEXT="+text)
+print(text.format(*sys.argv[1:]), end="")
+'
 
   python -c "$_PYSCRIPT" "$@" < $TEMPLATE_FILE >$_SCRIPT 2>> $USE_TEMPLATE_LOG
   echo "python -c $_PYSCRIPT '$@' < $TEMPLATE_FILE >$_SCRIPT" >> $USE_TEMPLATE_LOG
-#  python -c '
-#import sys
-#
-#text="".join( sys.stdin.readlines() )
-#print(text.format(*sys.argv[1:]), end="")
-#' "$@" < $TEMPLATE_FILE >$_SCRIPT 2>> $USE_TEMPLATE_LOG
 
   ls -altr $TEMPLATE_FILE $_SCRIPT >> $USE_TEMPLATE_LOG
   cat $_SCRIPT >> $USE_TEMPLATE_LOG

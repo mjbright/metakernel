@@ -791,7 +791,8 @@ EOF
 }
 
 test_piechart_js() {
-    USE_TEMPLATE d3_pie.js.template "$1" "$1" "$2" | html
+    #USE_TEMPLATE d3_pie.js.template "$1" "$1" "$2" | html
+    USE_TEMPLATE d3_pie.js.template "$1" "$2" | html
 }
 
 test_alert_js() {
