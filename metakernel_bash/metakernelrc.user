@@ -280,8 +280,6 @@ EOF
   python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
 }
 
-# TODO:
-# Implement html_table (takes i/p in MySQL o/p format and renders it as an html table)
 # Implement lightning
 
 # lightning_line plot:
