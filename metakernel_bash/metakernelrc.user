@@ -238,28 +238,32 @@ EOF
 # Implement html_table (takes i/p in MySQL o/p format and renders it as an html table)
 # Implement lightning
 
-# TEST lightning:
-NOTWORKING_lightning() {
+# lightning_line plot:
+lightning_line_test() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
-  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+  # NOTE use of '_' to prevent trying to import itself!
+  PYSCRIPT=$CYGROOT/$TMPDIR/_${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
+import IPython
 from lightning import Lightning
+lgn = Lightning(host="http://public.lightning-viz.org")
 
+#from numpy import random
+#viz = lgn.line(random.random(10))
+#
 from numpy import random, asarray
-
-lgn = Lightning(ipython=True, host='http://public.lightning-viz.org')
-
 series = random.randn(5, 50)
+#print(str(series))
+viz = lgn.line(series)
 
-lgn.line(series)
+print( viz.get_html() )
 
 EOF
 
-  #python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
-  cat $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
+  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.stdout 
 }
 
 csv_barchart() {
