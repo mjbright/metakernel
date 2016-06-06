@@ -2,8 +2,6 @@
 ## ----------------------------------------
 ## Configuration:
 
-CYGROOT="c:/tools/cygwin"
-
 [ -z "$USER" ] && USER="unknown"
 
 TMPDIR=/tmp/metakernel_bash_kernel
@@ -100,7 +98,7 @@ print("digraph G { \
 pydot_show_filetree() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
-  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
@@ -152,7 +150,7 @@ pydot_show_du() {
   MAX_ITEMS=10
   [ ! -z "$1" ] && MAX_ITEMS=$1
 
-  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
@@ -189,7 +187,7 @@ EOF
 html_table() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
-  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
@@ -235,7 +233,7 @@ EOF
 test_html_table() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
-  PYSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.py
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
@@ -287,7 +285,7 @@ lightning_line_test() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
   # NOTE use of '_' to prevent trying to import itself!
-  PYSCRIPT=$CYGROOT/$TMPDIR/_${FUNCNAME[0]}.py
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/_${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
@@ -315,7 +313,7 @@ bokeh_line_test() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
   # NOTE use of '_' to prevent trying to import itself!
-  PYSCRIPT=$CYGROOT/$TMPDIR/_${FUNCNAME[0]}.py
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/_${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
@@ -351,7 +349,7 @@ bokeh_piechart_test() {
   echo "Invoked ${FUNCNAME[0]} $*" >&2
 
   # NOTE use of '_' to prevent trying to import itself!
-  PYSCRIPT=$CYGROOT/$TMPDIR/_${FUNCNAME[0]}.py
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/_${FUNCNAME[0]}.py
 
   cat <<EOF > $PYSCRIPT
 
@@ -398,7 +396,7 @@ csv_date_linechart() {
   TMPFILE=tmp/${TMPFILE##*/}
   echo "csv_linechart: data file=$TMPFILE"
 
-  HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
+  HTMLSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.html
 
   cat <<EOF > $HTMLSCRIPT
 <!DOCTYPE html>
@@ -507,13 +505,13 @@ csv_linechart() {
   getinput_src "${FUNCNAME[0]}" "$1"
 
   # Copy TMPFILE to local ./tmp/
-  #TMPFILE=${CYGROOT}${TMPFILE}
+  #TMPFILE=${{ROOT_PATH_PREFIX}${TMPFILE}
   [ ! -d tmp ] && mkdir -p tmp
   cp $TMPFILE ./tmp/
   TMPFILE=tmp/${TMPFILE##*/}
   echo "csv_linechart: data file=$TMPFILE"
 
-  HTMLSCRIPT=$CYGROOT/$TMPDIR/${FUNCNAME[0]}.html
+  HTMLSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.html
 
   cat <<EOF > $HTMLSCRIPT
 <!DOCTYPE html>

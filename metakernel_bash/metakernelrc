@@ -2,8 +2,6 @@
 ## ----------------------------------------
 ## Configuration:
 
-CYGROOT="c:/tools/cygwin"
-
 TMPDIR=/tmp/metakernel_bash_kernel
 
 [ -z "$USER" ] && USER="unknown"
@@ -104,7 +102,7 @@ USE_TEMPLATE() {
 
   USE_TEMPLATE_LOG=/tmp/template.log
 
-  local _SCRIPT=${CYGROOT}$TMPDIR/${FUNCNAME[0]}.${TEMPLATE}.script
+  local _SCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.${TEMPLATE}.script
   echo "_SCRIPT=$_SCRIPT" >> $USE_TEMPLATE_LOG
 
   SOURCE_FILE=${BASH_SOURCE[0]}
