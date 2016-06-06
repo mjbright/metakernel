@@ -24,7 +24,8 @@ class DotMagic(Magic):
             if os.name == 'nt':
                 import pydotplus as pydot
             else:
-                import pydot
+                import pydotplus as pydot
+                #import pydot
         except:
             raise Exception("You need to install pydot")
         graph = pydot.graph_from_dot_data(str(code))
