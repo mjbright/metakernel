@@ -59,7 +59,7 @@ def extract_extension_filenames(output):
     output = "\n".join(output_lines)
     return extensions, extension_filenames, output
 
-cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin']
+cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin', 'c:/tools/cygwin64']
 
 class MetaKernelBash(MetaKernel):
     implementation = 'MetaKernel Bash'
