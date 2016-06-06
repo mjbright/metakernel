@@ -38,7 +38,7 @@ GETINPUT() {
     TMPFILE=$(mktemp ${TMPDIR}/${TMPFILE_BASE}.XXXXXX)
 
     echo "TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >/tmp/input.file
-    echo "TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >&2
+    #echo "DEBUG: TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >&2
     #[ ! -z "$1" ] && INPUT_SRC="$1"; shift;
     #[ ! -z "$1" ] && [ -f "$1" ] && { INPUT_SRC="$1"; shift; }
 
