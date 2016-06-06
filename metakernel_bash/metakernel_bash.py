@@ -18,11 +18,12 @@ def get_metakernelrc_path():
             path = root.split('/')
             #print((len(path) - 1) * '---', os.path.basename(root))
             for file in files:
-                if 'metakernelrc' in file:
+                #if 'metakernelrc' in file:
+                if file[-12:] == 'metakernelrc':
                     #print(len(path) * '---', file)
                     filepath='/'.join(path)  + '/' + file
                     filepath = filepath.replace('\\', '/')
-                    
+
                     #print(filepath)
                     return(filepath)
 
@@ -138,7 +139,10 @@ class MetaKernelBash(MetaKernel):
         if not MetaKernelBash.functions_sent:
             MetaKernelBash.functions_sent=True
             #resp = shell_magic.eval(image_setup_cmd)
+            #print("EVALUATING metakernelrc: <<" + source_metakernelrc_cmd + ">>")
             resp = shell_magic.eval(source_metakernelrc_cmd)
+        #else:
+            #print("NOT EVALUATING metakernelrc")
 
         # Execute shell command
         resp = shell_magic.eval(code.strip())
