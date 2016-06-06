@@ -7,6 +7,22 @@ import sys, os
 import base64
 import imghdr
 
+cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin', 'c:/tools/cygwin64']
+
+def get_root_path_prefix(candidate_paths):
+    """
+       Check amongst candidate_paths for an existing directory
+       and use this as a prefix for root : used for Cygwin installations
+    """
+    root_path_prefix=''
+
+    for cygwin_candidate_path in cygwin_candidate_paths:
+        if os.path.exists(cygwin_candidate_path):
+            root_path_prefix=cygwin_candidate_path
+            return root_path_prefix
+
+    return root_path_prefix
+
 def get_metakernelrc_path():
     # Location of this script:
     #print('sys.argv[0] =', sys.argv[0])             
@@ -30,14 +46,17 @@ def get_metakernelrc_path():
     print("ERROR: failed to find package metakernelrc under <{}>".pathname)
     sys.exit(1)
 
-metakernelrc = get_metakernelrc_path()
+root_path_prefix = get_root_path_prefix(cygwin_candidate_paths)
+metakernelrc     = get_metakernelrc_path()
 
 source_metakernelrc_cmd = """
 
 [ -f {} ]              && source {}
 [ -f ~/.metakernelrc ] && source ~/.metakernelrc
 
-""".format( metakernelrc, metakernelrc )
+ROOT_PATH_PREFIX="{}"
+
+""".format( metakernelrc, metakernelrc, root_path_prefix )
 
 _TEXT_SAVED_EXTENSION = "metakernel_bash_kernel: saved EXTENSION("
 
@@ -60,7 +79,6 @@ def extract_extension_filenames(output):
     output = "\n".join(output_lines)
     return extensions, extension_filenames, output
 
-cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin', 'c:/tools/cygwin64']
 
 class MetaKernelBash(MetaKernel):
     implementation = 'MetaKernel Bash'
@@ -83,12 +101,6 @@ class MetaKernelBash(MetaKernel):
     }
 
     functions_sent=False
-
-    root_path_prefix=''
-    for cygwin_candidate_path in cygwin_candidate_paths:
-        if os.path.exists(cygwin_candidate_path):
-            root_path_prefix=cygwin_candidate_path
-            break
 
     def get_usage(self):
         #return "This is the bash kernel."
@@ -156,7 +168,7 @@ class MetaKernelBash(MetaKernel):
         cnt=0
         for filename in extension_filenames:
             try:
-                filename = MetaKernelBash.root_path_prefix + filename
+                filename = root_path_prefix + filename
                 if extensions[cnt] == 'image':
                     display_data = self.display_data_for_image(filename)
                 else:
