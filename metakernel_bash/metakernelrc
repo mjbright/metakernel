@@ -84,7 +84,7 @@ metakernel_magic() {
     GETINPUT $MAGIC $*
 
     echo "$_TEXT_SAVED $TMPFILE" >&2
-    cat $TMPFILE
+    #cat $TMPFILE
 }
 
 # Metakernel magic definition functions:
