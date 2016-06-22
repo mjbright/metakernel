@@ -6,6 +6,9 @@ TMPDIR=/tmp/metakernel_bash_kernel
 
 [ -z "$USER" ] && USER="unknown"
 
+# Temporary hack:
+ROOT_PATH_PREFIX=c:/tools/cygwin
+
 # Aliases don't work: alias reread_metakernelrc="source ${BASH_SOURCE[0]}"
 function reread_metakernelrc { source ${BASH_SOURCE[0]}; }
 
@@ -60,7 +63,9 @@ GETINPUT() {
                 if [ -f "$INPUT_SRC" ];then
                     cp $INPUT_SRC $TMPFILE
                 else
-                    echo "No such INPUT_FILE <<$INPUT_SRC>>" > $TMPFILE
+                    # echo "No such INPUT_FILE <<$INPUT_SRC>>" > $TMPFILE
+                    # Assume data string:
+                    echo "$*" > $TMPFILE
                 fi
                 ;;
         esac

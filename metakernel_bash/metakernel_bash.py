@@ -9,6 +9,10 @@ import imghdr
 
 cygwin_candidate_paths=['c:/cygwin', 'c:/cygwin64', 'c:/tools/cygwin', 'c:/tools/cygwin64']
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
 def get_root_path_prefix(candidate_paths):
     """
        Check amongst candidate_paths for an existing directory
@@ -145,6 +149,7 @@ class MetaKernelBash(MetaKernel):
         #print("code=<<<<" + str(code) + ">>>>")
         #print("type=" + str(type(self)))
         self.log.debug('execute: %s' % code)
+        eprint('execute: %s' % code)
         shell_magic = self.line_magics['shell']
 
         # Send function definitions if not already done:
@@ -152,6 +157,8 @@ class MetaKernelBash(MetaKernel):
             MetaKernelBash.functions_sent=True
             #resp = shell_magic.eval(image_setup_cmd)
             #print("EVALUATING metakernelrc: <<" + source_metakernelrc_cmd + ">>")
+            self.log.debug('evaluating metakernelrc: %s' % metakernelrc)
+            eprint('evaluating metakernelrc: %s' % metakernelrc)
             resp = shell_magic.eval(source_metakernelrc_cmd)
         #else:
             #print("NOT EVALUATING metakernelrc")
@@ -167,6 +174,8 @@ class MetaKernelBash(MetaKernel):
         # Detect and process calls to extension functions
         cnt=0
         for filename in extension_filenames:
+            self.log.debug('filename: %s' % filename)
+            eprint('filename: %s' % filename)
             try:
                 filename = root_path_prefix + filename
                 if extensions[cnt] == 'image':
@@ -207,6 +216,7 @@ class MetaKernelBash(MetaKernel):
         #--------------------------------
 
         self.log.debug('execute done')
+        eprint('execute done')
         return resp.strip()
         #return HTML("<table><tr><td>" + resp.strip() + "</td></tr></table>")
 
