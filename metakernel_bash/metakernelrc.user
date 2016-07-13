@@ -659,4 +659,17 @@ test_alert_js() {
     USE_TEMPLATE alert.js.template "$1" | js
 }
 
+html_find() {
+  {
+    echo "+------+";
+    echo "| Path |" ;
+    echo "+------+";
+
+ set -x
+    find "$@" | sed -e 's/^/\| /' -e 's/$/ \|/' ;
+ set +x
+
+    echo "+------+" ;
+  } | html_table | html
+}
 
