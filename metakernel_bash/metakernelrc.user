@@ -670,3 +670,46 @@ html_find() {
   } | html_table | html
 }
 
+xls() {
+    [ -z "$1" ] && set -- *
+
+    LS_OPTS=""
+
+    COLS=4
+    { echo "<table>"; 
+      let COL=-1
+      for file in "$@"; do
+        case $file in
+          -*) LS_OPTS="$LS_OPTS $file";;
+          *)
+            let COL=$(((COL+1) % COLS))
+            [ $COL -eq 0 ] && echo "<tr>"
+            #ls -ald "$file"
+            echo "<td>"
+            ls -d $LS_OPTS "$file"
+
+            EXT=${file##*.}
+            TMP_TABLE_DIR=tmp/xls.tables
+            [ ! -d $TMP_TABLE_DIR ] && mkdir -p $TMP_TABLE_DIR
+            TMP_TABLE_FILE=$(mktemp ${TMP_TABLE_DIR}/TMP_TABLE.XXXXXX).$EXT
+
+            case "${file,,}" in
+                *.png|*.jpg|*.jpeg|*.gif)
+                    cp $file $TMP_TABLE_FILE;
+                    echo "<a href='$file'><img width=200 src='$TMP_TABLE_FILE' /></a>"
+                    ;;
+                *.htm|*.html)
+                    cp $file $TMP_TABLE_FILE;
+                    echo "<a href='$file'><iframe src='$TMP_TABLE_FILE' /></a>"
+                    ;;
+            esac
+            echo "</td>"
+            [ $COL -eq $((COLS - 1)) ] && echo "</tr>"
+            ;;
+         esac
+      done 
+      [ $COL -ne $((COLS - 1)) ] && echo "</tr>"
+      #[ $COL -ne 0 ] && echo "</tr>"
+      echo "</table>"
+   } | html
+}
