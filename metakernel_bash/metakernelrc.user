@@ -810,3 +810,10 @@ EOF
   python $PYSCRIPT $* |& tee $TMPDIR/${FUNCNAME[0]}.html
 }
 
+list2html() {
+    { echo "+------+";
+      sed -e 's/^/\| /' -e 's/$/ \|/'
+      echo "+------+"; } | html_table
+}
+
+
