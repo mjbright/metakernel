@@ -121,7 +121,7 @@ for line in lines:
     ROOTLABEL=line;
     NODES[ROOT]="root"
     print()
-    print("  {} [label=\"{}\"];".format( ROOT, ROOTLABEL) )
+    print('  "{}" [label="{}"];'.format( ROOT, ROOTLABEL) )
   else:
     PARENT=line[:line.rfind('/')]
     CHILD=line[1+line.rfind('/'):]
@@ -129,14 +129,13 @@ for line in lines:
     PARENTNODE = PARENT.replace('/','_')
 
     NODES[NODE]=CHILD
-    print("  {} -> {};".format(PARENTNODE, NODE))
+    print('  "{}" -> "{}";'.format(PARENTNODE, NODE))
     print()
-    print("  {} [label=\"{}\"];".format(NODE, CHILD))
+    print('  "{}" [label="{}"];'.format(NODE, CHILD))
 
 print("}\n")
 EOF
   python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
-#} ") '
 }
 
 #
