@@ -713,3 +713,100 @@ xls() {
       echo "</table>"
    } | html
 }
+
+#
+# Function: csv2html
+# Usage: csv2html
+csv2html() {
+  echo "Invoked ${FUNCNAME[0]} $*" >&2
+
+  PYSCRIPT=${ROOT_PATH_PREFIX}$TMPDIR/${FUNCNAME[0]}.py
+
+  cat <<EOF > $PYSCRIPT
+import sys
+import csv
+import io
+
+header=False
+delimiter=None
+verbosity=0
+
+a=1
+while len(sys.argv) > a:
+    arg=sys.argv[a]
+    a += 1
+    if arg == "-v":
+        verbosity += 1
+    if arg == "-h":
+        header=True
+    if arg == "-d":
+        delimiter=sys.argv[a]
+        a += 1
+    
+def stderr(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+    
+def tohex(str):
+    return ":".join("{:02x}".format(ord(c)) for c in str)
+
+def compressMultipleSpaces(text):
+
+    for line in text:
+        # Compress multiple spaces
+        templine=''
+        lastchar=''
+        for char in line:
+            if char == ' ' and lastchar == ' ':
+                pass
+            templine += char
+            lastchar=char
+        line=templine
+        
+        text += line
+
+    return text
+    
+text=' '.join(sys.stdin.readlines())
+
+if delimiter == 'TAB':
+    delimiter=chr(9)
+
+if delimiter == 'SPACES':
+    delimiter=' '
+    text = compressMultipleSpaces(text)
+
+if delimiter:
+    csvreader = csv.reader(text.splitlines(), delimiter=delimiter, quotechar='|')
+else:
+    sample_len = 100
+    if len(text) < 100:
+        sample_len = len(text)
+    
+    dialect = csv.Sniffer().sniff(text[:sample_len])
+    if verbosity > 1:
+        stderr("DELIMITER=<" + tohex(dialect.delimiter) + ">")
+    csvreader = csv.reader(text.splitlines(), dialect=dialect, quotechar='|')
+
+print('<table>')
+
+for row in csvreader:
+    #print("COLS=" + str(len(row)))
+    #print("ROW=<" + str(row) + ">")
+    #continue
+    if header:
+        print('<tr><th>')
+        print('</th><th>'.join(row))
+        print('</th></tr>')
+        header=False
+    else:
+        print('<tr><td>')
+        print('</td><td>'.join(row))
+        print('</td></tr>')
+        
+print('</table>')
+
+EOF
+
+  python $PYSCRIPT $* |& tee $TMPDIR/${FUNCNAME[0]}.html
+}
+
