@@ -39,6 +39,7 @@ GETINPUT() {
     INPUT_SRC="$1"
 
     TMPFILE=$(mktemp ${TMPDIR}/${TMPFILE_BASE}.XXXXXX)
+    TMPERRFILE=$(mktemp ${TMPDIR}/${TMPFILE_BASE}.errors.XXXXXX)
 
     echo "TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >/tmp/input.file
     #echo "DEBUG: TMPFILE='$TMPFILE' INPUT_SRC='$INPUT_SRC'" >&2
@@ -51,17 +52,17 @@ GETINPUT() {
     else
         case "$INPUT_SRC" in
             http:*)
-                wget -O - $INPUT_SRC > $TMPFILE;
+                wget -O - $INPUT_SRC > $TMPFILE 2>$TMPERRFILE;
                 ;;
             https:*)
-                wget -O - $INPUT_SRC > $TMPFILE;
+                wget -O - $INPUT_SRC > $TMPFILE 2>$TMPERRFILE;
                 ;;
             data:*)
                 echo "$INPUT_SRC" > $TMPFILE;
                 ;;
             *)
                 if [ -f "$INPUT_SRC" ];then
-                    cp $INPUT_SRC $TMPFILE
+                    cp $INPUT_SRC $TMPFILE 2>$TMPERRFILE;
                 else
                     # echo "No such INPUT_FILE <<$INPUT_SRC>>" > $TMPFILE
                     # Assume data string:
@@ -70,6 +71,9 @@ GETINPUT() {
                 ;;
         esac
     fi
+
+    ls -altr $TMPERRFILE >> /tmp/tmperrfiles.log 2>&1
+    [ -f $TMPERRFILE ] && [ ! -s $TMPERRFILE ] && rm -f $TMPERRFILE
 }
 
 COPY_TMPFILE() {
