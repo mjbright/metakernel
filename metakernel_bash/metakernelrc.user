@@ -664,9 +664,7 @@ html_find() {
     echo "| Path |" ;
     echo "+------+";
 
- set -x
     find "$@" | sed -e 's/^/\| /' -e 's/$/ \|/' ;
- set +x
 
     echo "+------+" ;
   } | html_table | html
