@@ -693,25 +693,8 @@ _xls() {
           *)
             let COL=$(((COL+1) % COLS))
             [ $COL -eq 0 ] && echo "<tr>"
-            #ls -ald "$file"
             echo "<td>"
-            ls -d $LS_OPTS "$file"
-
-            EXT=${file##*.}
-            TMP_TABLE_DIR=tmp/xls.tables
-            [ ! -d $TMP_TABLE_DIR ] && mkdir -p $TMP_TABLE_DIR
-            TMP_TABLE_FILE=$(mktemp ${TMP_TABLE_DIR}/TMP_TABLE.XXXXXX).$EXT
-
-            case "${file,,}" in
-                *.png|*.jpg|*.jpeg|*.gif)
-                    cp $file $TMP_TABLE_FILE;
-                    echo "<a href='$file'><img width=200 src='$TMP_TABLE_FILE' /></a>"
-                    ;;
-                *.htm|*.html)
-                    cp $file $TMP_TABLE_FILE;
-                    echo "<a href='$file'><iframe src='$TMP_TABLE_FILE' /></a>"
-                    ;;
-            esac
+            display_file "$file"
             echo "</td>"
             [ $COL -eq $((COLS - 1)) ] && echo "</tr>"
             ;;
@@ -720,8 +703,63 @@ _xls() {
       [ $COL -ne $((COLS - 1)) ] && echo "</tr>"
       #[ $COL -ne 0 ] && echo "</tr>"
       echo "</table>"
-   } | html
+   }
 }
+
+xls() {
+    _xls | html
+}
+
+sanitize_text() {
+    sed -e 's/</&lt;/g' -e 's/>/&gt;/g'
+}
+
+display_file() {
+    file="$1"; shift
+
+    echo "<a href='$file'> <b><u>"; ls -d $LS_OPTS "$file"; echo "</u></b> </a><br/>"
+
+    if [ -d $file ];then
+        echo "<img width=50 alt='No Image' src='$FOLDER_ICON_BASE64' />"
+        return;
+    fi
+
+    EXT=${file##*.}
+
+    case "${EXT,,}" in # lowercase
+        png|jpg|jpeg|gif|tiff|svg)
+            TMP_TABLE_DIR=tmp/xls.tables
+            [ ! -d $TMP_TABLE_DIR ] && mkdir -p $TMP_TABLE_DIR
+            TMP_TABLE_FILE=$(mktemp ${TMP_TABLE_DIR}/TMP_TABLE.XXXXXX).$EXT
+
+            cp $file $TMP_TABLE_FILE;
+            echo "<img width=100 src='$TMP_TABLE_FILE' />"
+            ;;
+        ipynb)
+            echo "<img width=100 alt='No Image' src='data:image/svg+xml;utf8,$JUPYTER_SVG' />"
+            ;;
+        js|py|pl|rb|md|txt|yaml|json) head -10 $file | sanitize_text;;
+        csv) head -10 $file | csv2html;;
+        htm|html)
+            TMP_TABLE_DIR=tmp/xls.tables
+            [ ! -d $TMP_TABLE_DIR ] && mkdir -p $TMP_TABLE_DIR
+            TMP_TABLE_FILE=$(mktemp ${TMP_TABLE_DIR}/TMP_TABLE.XXXXXX).$EXT
+
+            cp $file $TMP_TABLE_FILE;
+            echo "<iframe src='$TMP_TABLE_FILE' />";;
+        *)
+            case "$file" in
+              Dockerfile)
+                echo "<img width=100 alt='No Image' src='data:image/svg+xml;utf8,$DOCKER_SVG' />"
+                ;;
+              *)
+                echo "<img width=50 alt='No Image' src='$QN_MARK_BASE64' />"
+                ;;
+            esac
+            ;;
+    esac
+}
+
 
 #
 # Function: csv2html
