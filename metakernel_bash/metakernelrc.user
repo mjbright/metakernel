@@ -135,7 +135,8 @@ for line in lines:
 
 print("}\n")
 EOF
-  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot | pydot
+  python $PYSCRIPT |& tee $TMPDIR/${FUNCNAME[0]}.pydot
+  #| pydot
 }
 
 #
