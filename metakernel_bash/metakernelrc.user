@@ -829,10 +829,14 @@ else:
     if len(text) < 100:
         sample_len = len(text)
     
-    dialect = csv.Sniffer().sniff(text[:sample_len])
-    if verbosity > 1:
-        stderr("DELIMITER=<" + tohex(dialect.delimiter) + ">")
-    csvreader = csv.reader(text.splitlines(), dialect=dialect, quotechar='|')
+    try:
+        dialect = csv.Sniffer().sniff(text[:sample_len])
+        if verbosity > 1:
+            stderr("DELIMITER=<" + tohex(dialect.delimiter) + ">")
+        csvreader = csv.reader(text.splitlines(), dialect=dialect, quotechar='|')
+    except:
+        # On failure to sniff, try ',' delimiter
+        csvreader = csv.reader(text.splitlines(), delimiter=',', quotechar='|')
 
 print('<table>')
 
